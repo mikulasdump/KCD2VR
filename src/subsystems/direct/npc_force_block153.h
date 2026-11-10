@@ -8,7 +8,7 @@
 // The choice itself is the game's own switch wh_cs_ForceBlock ("Force AI to block by: 0 disabled, 1 normal block,
 // 2 perfect block, ..."), the C39 lever. With BY SKILL ON (or VrDirectNpcBlock 1..3) one roll is made for Henry's NEXT
 // swing against his current opponent (exact reciprocal C_CombatActor pair, as C39/H24 read it):
-//   chance = 25 % at the opponent's best melee skill 0 .. 75 % at skill >= 30 (VrDirectNpcBlock 1: 65 %, 2/3: always).
+//   chance = 40 % (R177; R153: 25 %) at the opponent's best melee skill 0 .. 75 % at skill >= 30 (VrDirectNpcBlock 1: R177 50 .. 85 %, 2/3: always).
 // A won roll leases wh_cs_ForceBlock = 1 (mode 3: 2) during that swing only (R156: wind-up + strike, never between swings),
 // then it is rolled again. A lost roll
 // leaves the native value. The lease is written BEFORE the swing starts, so the native block offer of that swing sees it.
@@ -37,19 +37,21 @@ inline std::atomic<bool> opponentPos{false};
 inline std::atomic<float> opponentX{0.f},opponentY{0.f};
 inline std::atomic<std::uint64_t> publishedMs{0};
 constexpr std::uint64_t kFreshMs=500;
-constexpr float kChanceSkill0=.25f,kChanceSkill30=.75f,kChanceMode1=.65f;
+constexpr float kChanceSkill0=.40f,kChanceSkill30=.75f,kChanceMode1=.65f; // R177: skill 0 = 40 % (was 25 %, Miki 9 Nov: low-level enemies blocked too rarely)
+// R177 VrDirectNpcBlock 1 OFTEN is by skill too now: 50 % at skill 0 .. 85 % at skill 30+ (was a flat 65 %, kept for reference)
+constexpr float kChanceMode1Skill0=.50f,kChanceMode1Skill30=.85f;
 
 // Best of the five melee weapon skills (sword, heavy, large, dagger, unarmed; 0..40). -1 = unread.
 inline int bestSkill(const int (&skills)[5]) noexcept {int best=-1;for(const int s:skills)if(s>=0&&s<=40&&s>best)best=s;return best;}
 // Henry's own ordinary attack is running (native phase 4 wind-up or 8 strike): the lease must not change under it.
 inline bool attacking(int phase) noexcept {return phase==4||phase==8;}
-// mode = VrDirectNpcBlock (0 native, 1 often, 2 always block, 3 always perfect block).
+// mode = VrDirectNpcBlock (0 by skill, 1 often, 2 always block, 3 always perfect block, 4 OFF = never forced, R178).
 inline float chance(int mode,bool bySkill,int skill) noexcept {
+    if(mode==4)return 0.f; // R178 OFF: the roll never runs, the game's own wh_cs_ForceBlock value stays
     if(mode==2||mode==3)return 1.f;
-    if(mode==1)return kChanceMode1;
+    const float t=skill<0?0.f:skill>=30?1.f:float(skill)/30.f; // unread skill = the weak end
+    if(mode==1)return kChanceMode1Skill0+(kChanceMode1Skill30-kChanceMode1Skill0)*t;
     if(!bySkill)return 0.f;
-    if(skill<0)return kChanceSkill0;
-    const float t=skill>=30?1.f:float(skill)/30.f;
     return kChanceSkill0+(kChanceSkill30-kChanceSkill0)*t;
 }
 inline int forceValue(int mode) noexcept {return mode==3?2:1;}

@@ -20,8 +20,8 @@
                 shot.body=c.bodyEpoch;shot.request=c.epoch;shot.sample=c.sample;shot.tick=now;
                 shot.tracking=kcd2vr::tracking59c6::epoch.load(std::memory_order_acquire);
                 void* charge=g_phys_charge_action175.load(std::memory_order_acquire);
-                if(n.physicalBow175&&c.aimWorldD65C&&PhysVft6698(charge,0x47083C0)){
-                    (void)Read(static_cast<unsigned char*>(charge)+0x60,shot.ownerInterface);
+                if(n.physicalBow175&&c.aimWorldD65C){ // R174: the direction does not need the charge action; only the exact-action bind does
+                    if(PhysVft6698(charge,0x47083C0))(void)Read(static_cast<unsigned char*>(charge)+0x60,shot.ownerInterface);
                     const double dir[]{c.aimDirWorldD65C.x,c.aimDirWorldD65C.y,c.aimDirWorldD65C.z};
                     const double up[]{c.aimUpWorldD65C.x,c.aimUpWorldD65C.y,c.aimUpWorldD65C.z};
                     const double pos[]{c.aimNockWorldD65C.x,c.aimNockWorldD65C.y,c.aimNockWorldD65C.z};
@@ -29,11 +29,15 @@
                 }
                 aim::ReleaseScope release(shot);
                 called=PhysBowCall6698(e.player,1);const bool boundAim=release.finish(called);
+                if(n.physicalBow175&&ranged_options_d65c::bowPhysicalAim.load()&&called&&!release.valid){ // R172: say why, one line per shot
+                    const char* why=!c.aimWorldD65C?"NO_RELEASE_POSE":!kcd2vr::bow_physical_aim_d65c::hooksReady.load()?"SHOOT_HOOKS_NOT_READY":
+                        !shot.tracking?"NO_TRACKING_EPOCH":"RELEASE_IDENTITY_INCOMPLETE";
+                    char row[160]{};std::snprintf(row,sizeof(row),"R172 BOW_AIM arrow used the game's aim, reason=%s",why);diagnostic_trace::Write(row);}
                 if(n.physicalBow175&&ranged_options_d65c::bowPhysicalAim.load()&&
                    (diagnostics::capture168::active(diagnostics::capture168::Domain::Combat,now)||
                     diagnostics::capture168::active(diagnostics::capture168::Domain::Reload,now))){
-                    char row[192]{};std::snprintf(row,sizeof(row),"D65 BOW_RELEASE nativeCallReturned=%d exactFiringAction=%d action=%p release=%llu",
-                        int(called),int(boundAim),release.value.action,(unsigned long long)release.value.serial);diagnostic_trace::Write(row);}
+                    char row[192]{};std::snprintf(row,sizeof(row),"D65 BOW_RELEASE nativeCallReturned=%d exactFiringAction=%d action=%p release=%llu validRelease=%d launcher=%p",
+                        int(called),int(boundAim),release.value.action,(unsigned long long)release.value.serial,int(release.valid),release.value.launcher);diagnostic_trace::Write(row);}
                 n.bowHeld=false;n.physicalBow175=false;
                 g_phys_charge_action175.store(nullptr,std::memory_order_release);
                 g_phys_charge_player175.store(nullptr,std::memory_order_release);

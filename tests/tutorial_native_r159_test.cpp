@@ -76,26 +76,36 @@ int main(){
         ck(e.step(true)==1,"on row");ck(e.step(true)==-1,"no repeat");ck(e.step(false)==0,"off row");ck(e.step(false)==-1,"no repeat");
         T::Edge f{};ck(f.step(true)==1,"start ON = on row");
     }
-    {   // 5. Experiments: VRIK page 2 row 5, default GAME TIMING (R161), cycles OFF / NATIVE HITS / GAME TIMING, never refused
-        VrMenuState s{};ck(s.live_d39.tutorialNativeHitsR159==0,"Settings default OFF (R162) = the runtime default");
-        s.live_d39.tutorialNativeHitsR159=1; // the old ON: the cycle below goes NATIVE HITS -> GAME TIMING -> OFF -> NATIVE HITS
-        unsigned selected=live::kHandsPage2D71;
-        ck(live::group(selected)==live::Group::Hands,"page 2 of the VRIK tab");
+    {   // 5. R171: the tutorial row is gone, VRIK page 2 rows 4/5 and NPCS rows 3/4/8 are the combo help, never refused, live
+        VrMenuState s{};unsigned selected=live::pageOf(live::Id::ComboHoldR171); // R184: COMBAT page 2 (Combos) rows 1..5
+        ck(live::group(selected)==live::Group::Combat&&live::pageNumber(selected)==3,"COMBAT page 3 (R186: page 2 = free targeting +)");
         const auto& rows=live::rows(selected);
-        ck(rows[4].id==live::Id::TutorialNativeHitsR159&&!rows[4].readOnly&&!rows[4].session,"row 5 = the switch, saved");
-        wchar_t text[200]{};live::label(s,rows[4],text,200);ck(std::wcsstr(text,L"NATIVE HITS")!=nullptr,"label NATIVE HITS");
-        const auto r=live::rowRect(4);
-        const auto click=[&]{return live::dispatch(selected,r.l+2,r.t+2,s,[](const VrMenuState&){return true;},[]{return true;});};
-        ck(click()==live::Click::Changed&&s.live_d39.tutorialNativeHitsR159==2,"-> GAME TIMING (never refused)");
-        live::label(s,rows[4],text,200);ck(std::wcsstr(text,L"GAME TIMING")!=nullptr,"label GAME TIMING");
-        ck(click()==live::Click::Changed&&s.live_d39.tutorialNativeHitsR159==0,"-> OFF");
-        live::label(s,rows[4],text,200);ck(std::wcscmp(text,L"OFF")==0||std::wcsstr(text,L"OFF")!=nullptr,"label OFF");
-        ck(click()==live::Click::Changed&&s.live_d39.tutorialNativeHitsR159==1,"-> NATIVE HITS again");
-        s.live_d39.tutorialNativeHitsR159=9;ck(click()==live::Click::Changed&&s.live_d39.tutorialNativeHitsR159==0,"bad stored value clamps, then cycles");
-        bool swapStill=false;for(const auto& row:live::rows(live::kObjectsPage3R158))swapStill=swapStill||row.id==live::Id::SceneryPropSwapR100;
-        ck(swapStill,"Loose scenery props still has its row (OBJECTS page 3)");
-        unsigned ids=0;for(unsigned p=0;p<=live::kObjectsPage3R158;++p)for(const auto& row:live::rows(p))ids+=row.id==live::Id::TutorialNativeHitsR159;
-        ck(ids==1,"exactly one row");
+        ck(rows[0].id==live::Id::ComboHoldR171&&rows[1].id==live::Id::ComboHoldSecR171&&!rows[0].readOnly&&!rows[1].session,"rows 1/2");
+        ck(s.live_d39.comboHoldR171&&s.live_d39.comboHoldSecR171==1.f,"defaults: hold ON, 1.00 s");
+        wchar_t text[200]{};live::label(s,rows[0],text,200);ck(std::wcsstr(text,L": ON")!=nullptr,"label ON");
+        const auto click=[&](int row){const auto r=live::rowRect(row);return live::dispatch(selected,r.l+2,r.t+2,s,[](const VrMenuState&){return true;},[]{return true;});};
+        ck(click(0)==live::Click::Changed&&!s.live_d39.comboHoldR171,"hold -> OFF");ck(click(0)==live::Click::Changed&&s.live_d39.comboHoldR171,"hold -> ON");
+        ck(click(1)==live::Click::Changed&&s.live_d39.comboHoldSecR171==1.25f,"wait 1.25 s");
+        live::label(s,rows[1],text,200);ck(std::wcsstr(text,L"1.25 s")!=nullptr,"label 1.25 s");
+        ck(click(1)==live::Click::Changed&&s.live_d39.comboHoldSecR171==1.5f,"wait 1.5 s");ck(click(1)==live::Click::Changed&&s.live_d39.comboHoldSecR171==.25f,"wraps to 0.25 s");
+        const auto& npc=rows;
+        ck(npc[2].id==live::Id::ComboWindowR171&&npc[3].id==live::Id::ComboWindowSecR171&&npc[4].id==live::Id::ComboZoneR171,"COMBAT 2 rows 3/4/5");
+        ck(live::group(live::pageOf(live::Id::RangedRtFireR175))==live::Group::RepairsD65&&s.live_d39.rangedRtFireR175,"R175 -> R184: RANGED tab, default ON");
+        {struct NB:VrMenuState{int npc_block39=0;} b{};const auto& n=live::rows(live::pageOf(live::Id::NpcBlockR177));ck(live::pageOf(live::Id::NpcBlockR177)==unsigned(live::Group::Combat)&&n[1].id==live::Id::NpcBlockR177,"R184: COMBAT 1 row 2 = enemies block");
+         ck(b.npc_block39==0,"default BY SKILL (0)");live::advance(b,live::Id::NpcBlockR177);ck(b.npc_block39==1,"-> OFTEN");
+         wchar_t tx[200]{};live::label(b,n[1],tx,200);ck(std::wcsstr(tx,L"50-85")!=nullptr,"label OFTEN 50-85");
+         live::advance(b,live::Id::NpcBlockR177);live::advance(b,live::Id::NpcBlockR177);ck(b.npc_block39==3,"-> PERFECT");live::advance(b,live::Id::NpcBlockR177);ck(b.npc_block39==4,"-> OFF (R178)");live::advance(b,live::Id::NpcBlockR177);ck(b.npc_block39==0,"-> BY SKILL");}
+        {const auto& o3=live::rows(unsigned(live::Group::Npc));ck(o3[0].id==live::Id::WeaponLeadR180&&o3[6].id==live::Id::SwingPowerArmR178&&s.live_d39.weaponLeadR180==1.f&&s.live_d39.swingPowerArmR178,"R184: WEAPONS 1 rows 1/7, default ON");
+         auto c=s;live::advance(c,live::Id::WeaponLeadR180);live::advance(c,live::Id::SwingPowerArmR178);ck(c.live_d39.weaponLeadR180==1.5f&&!c.live_d39.swingPowerArmR178,"R178 rows toggle");}
+        {ck(live::group(live::pageOf(live::Id::StoneThrowR176))==live::Group::RepairsD65&&s.live_d39.stoneThrowR176,"R184: stone throw on RANGED, default ON");
+         unsigned dag=0;for(unsigned p=0;p<live::kPageCount;++p)for(const auto& row:live::rows(p))dag+=row.id==live::Id::ChestDagger;ck(dag==0,"R176: chest dagger row removed");}
+        ck(s.live_d39.comboWindowR171&&s.live_d39.comboWindowSecR171==1.5f&&s.live_d39.comboZoneR171,"defaults = INI");
+        ck(click(3)==live::Click::Changed&&s.live_d39.comboWindowSecR171==2.f,"slot 2.0 s");live::label(s,npc[3],text,200);ck(std::wcsstr(text,L"2.0 s")!=nullptr,"label 2.0 s");
+        ck(click(2)==live::Click::Changed&&!s.live_d39.comboWindowR171,"keep slot -> OFF");ck(click(4)==live::Click::Changed&&!s.live_d39.comboZoneR171,"zone help -> OFF");
+        unsigned ids=0,removed=0;for(unsigned p=0;p<live::kPageCount;++p)for(const auto& row:live::rows(p)){ids+=row.id==live::Id::ComboHoldR171;
+            removed+=row.id==live::Id::TutorialNativeHitsR159||row.id==live::Id::TrainingVanillaNpcR163||row.id==live::Id::NpcLifeD73||row.id==live::Id::NpcListeningD76||row.id==live::Id::NpcGazeD52;}
+        ck(ids==1&&removed==0,"exactly one hold row, the 5 removed switches have none");
+        ck(live::group(live::pageOf(live::Id::SceneryPropSwapR100))==live::Group::Objects,"Loose scenery props still has its row (OBJECTS)");
         ck(live::layoutValid(),"layout valid");
     }
     {   // 6. R161 INI: numbers 0..2, the old bool spelling, missing = 2

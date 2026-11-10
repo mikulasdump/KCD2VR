@@ -1,3 +1,4 @@
+// R187: R167 left trigger -> LB removed (LT is LT again; X does the look / Follow prompts as before)
 #include "vrik/native_bridges168.h" // R96: VrWeaponKickR96 switch
 #include "xr_eye_srgb_r114.h" // R114: VrEyeSrgbR114 (live_runtime_d40.inl)
 #include "hud_lock_alpha_r141.h" // R141: VrLockpickOpaqueR141 (live_runtime_d40.inl, hud_layer_v6664.cpp)
@@ -114,6 +115,14 @@
 #include "subsystems/direct/npc_force_block153.h" // R153 NPC defence roll by skill
 #include "subsystems/direct/tutorial_native_r159.h" // R159: VrTutorialNativeHitsR159 (live_runtime_d40.inl)
 #include "subsystems/direct/training_vanilla_r163.h" // R163: VrTrainingVanillaNpcR163 (training fights: no mod write to any NPC)
+#include "vrik/body_follow_r173.h" // R173: VrBodyFollowHmdR173 (camera_hook step, pad rx, live_runtime_d40)
+#include "subsystems/ranged_reload/ranged_rt_fire_r175.h" // R175: VrRangedRtFireR175 crossbow / gun RT alone shoots
+#include "vrik/weapon_lead_r180.h" // R180: VrWeaponLeadR180
+#include "vrik/root_lead_r191.h" // R191: VrBodyLeadR191
+#include "ui_palm_look_r192.h" // R192: VrPalmLookR192
+#include "vrik/chest_back_r183.h" // R183: VrChestBackCmR183
+#include "vrik/weapon_feel_r178.h" // R178: VrWeaponHandlePivotR178 / VrSwingPowerArmR178
+#include "subsystems/throw_drop/stone_throw_r176.h" // R176: VrStoneThrowR176 crouched left grip = the game's stone throw (RB)
 #include <climits>
 #include "diagnostics/hotkeys168r1.h"
 #include "diagnostics/hook_cost178r22.h" // V66.178R22c
@@ -2700,7 +2709,7 @@ bool Mod::ApplyMenuState(const VrMenuState& requestedState)
     if(g_smooth_move51.exchange(state.smooth_move51)!=state.smooth_move51)frik_pose_probe::SetSmoothBody51(state.smooth_move51);
     if(frik_pose_probe::NativeCrouchR93()!=state.native_crouch_r93)frik_pose_probe::SetNativeCrouchR93(state.native_crouch_r93);
     if(frik_pose_probe::BodyHeightModeR98()!=state.body_height_mode98)frik_pose_probe::SetBodyHeightModeR98(state.body_height_mode98); // R98
-    if(frik_pose_probe::ChestDagger54()!=state.chest_dagger54)frik_pose_probe::SetChestDagger54(state.chest_dagger54);
+    // R176: the chest dagger is removed; no menu can switch it back on
 #define KCD2VR_M2_HOST_SLOT 76 // M2_SOURCE_SELECTOR
 #include "subsystems/throw_drop/host.inl" // M2_OWNED_SOURCE slot=76
 #undef KCD2VR_M2_HOST_SLOT // M2_SOURCE_SELECTOR
@@ -2769,7 +2778,7 @@ bool Mod::ApplyMenuState(const VrMenuState& requestedState)
         for(int h=0;h<2;++h)for(int f=0;f<5;++f)finger40::setMiddleLateralC54(h,f,state.finger_middle_lateral_c54[h][f]);
         for(int h=0;h<2;++h){finger40::setShiftMmH31(h,state.finger_middle_shift_mm_h31[h]);finger40::setDistalMedialDegH31(h,state.finger_middle_distal_medial_h31[h]);} // H31_FINGER_APPLY
         frik_pose_probe::SetNpcProximityRadius36(state.exp_npc_proximity_radius36); // C38P: same owner/clamp and existing INI persistence
-        g_npc_block39.store(std::clamp(state.npc_block39,0,3)); // C39
+        g_npc_block39.store(std::clamp(state.npc_block39,0,4)); // C39 (R178: 4 = OFF)
         if(g_touch43.exchange(state.npc_touch43)!=state.npc_touch43)frik_pose_probe::SetTouchReact43(state.npc_touch43,g_touch_mass43.load()); // C43T
         g_fallplay43.store(state.npc_fallplay43);
         {   // R59.16C10R5: NPC block ETA (S33) and the opponent-in-reach gate
@@ -3126,7 +3135,6 @@ bool Mod::SaveMenuSettings() const
     ok = wb("VrNativeCrouchR93", frik_pose_probe::NativeCrouchR93()) && ok;
     ok = wi("VrBodyHeightModeR98", frik_pose_probe::BodyHeightModeR98()) && ok; // R98: 0 HMD, 1 NATIVE, 2 HMD + NATIVE (ride/crouch)
     ok = wb("VrHmdBodyHeight", frik_pose_probe::HmdBodyHeight54()) && ok; // old bool, kept for older builds
-    ok = wb("VrChestDagger", frik_pose_probe::ChestDagger54()) && ok;
 
 #define KCD2VR_CONFIG_SAVE_THROW_DROP0
 #include "subsystems/throw_drop/config.inl"
@@ -3853,7 +3861,7 @@ bool Mod::LoadConfig()
         }
         frik_pose_probe::SetBodyHeightModeR98(bodyHeightR98);
     }
-    frik_pose_probe::SetChestDagger54(ReadIniBoolExplicit(explicit_ini,"Settings","VrChestDagger",true));
+    frik_pose_probe::SetChestDagger54(false); // R176: the chest dagger is removed (no texture, never worked); VrChestDagger is not read
 
 #define KCD2VR_CONFIG_LOAD_THROW_DROP0
 #include "subsystems/throw_drop/config.inl"
@@ -4136,7 +4144,7 @@ bool Mod::LoadConfig()
         combat_diag_probe::SetComboWindowExtension(ReadIniBoolExplicit(explicit_ini,"Settings","VrComboWindowExtend",true));
         kcd2vr::combo_zone_assist_cz::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings","VrComboZoneAssist",true)); // I12 (C29 default on)
         kcd2vr::feint_fe::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings","VrFeintHybrid",true)); // D34 FE: post-commit HYBRID native feint (default on)
-        kcd2vr::combo_hold_r14::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings","VrComboRecoveryHold",false)); // I12/N2: hold Henry's attack end while the combo slot is open
+        kcd2vr::combo_hold_r14::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings","VrComboRecoveryHold",true)); // I12/N2: hold Henry's attack end while the combo slot is open. R171: default ON (8 Nov log: both presses inside the slot were eaten, release UNSEEN)
         kcd2vr::combo_carrier_cb::enabled.store(kcd2vr::combo_hold_r14::enabled.load()); // D30-CMB: carrier keep-alive follows COMBO HELP: HOLD
         kcd2vr::combo_hold_r14::maxHoldMs.store(std::uint32_t(std::clamp(ReadIniIntExplicit(explicit_ini,"Settings","VrComboRecoveryHoldMs",1000),0,1500))); // 0 = off
         combat_diag_probe::SetComboTestForce(false); // DS-F6 TEST toggle is session-only, always OFF at startup
@@ -5835,7 +5843,9 @@ void Mod::Run()
     // C63: native target resolution stays original-first. Only an already
     // Henry-targeting LookAt in a fresh embodied FirstPerson dialogue may use
     // the current HMD point; no AI task/participant controller is replaced.
-    npc_lookat_hmd::SetEnabled(npc_lookat_hmd::Install());
+    // R171: the dialogue NPC look at the HMD (C63/D52) and lively NPC (D73/D76) are removed: the +59B0F0 look hook is no
+    // longer installed, NPCs keep the game's own look target. npc_lookat_hmd::Uninstall at shutdown is a no-op without it.
+    npc_lookat_hmd::SetEnabled(false);
     const bool shop_state_probe_installed=false; // Query-wrapper cache is not a lifecycle owner.
     diagnostic_trace::Write("V66.176 SCOPE: authored minigames retain native gamepad semantics; semantic HUD elements preserve native content and full-field effects");
     const bool ui88_lifecycle_installed=ui_native_state::Install();
@@ -6825,6 +6835,17 @@ void Mod::Run()
                         r::bleedSign.load(),r::userTurning(nowR133)?1:0);
                     diagnostic_trace::Write(m);
                 }
+            }
+            {   // R173 body follows the headset: one line when it changes (ON/OFF, wrong-sign flips, reset), 10 s while it turns
+                namespace bf=kcd2vr::body_follow_r173;const auto nowR173=std::uint64_t(GetTickCount64());
+                static int lastOnR173=-1;static std::uint64_t lastFlipsR173=0,lastResetsR173=0,lastFramesR173=0,lastRowR173=0;
+                const int onR173=bf::enabled.load()?1:0;const auto flipsR173=bf::flips.load(),resetsR173=bf::resets.load(),framesR173=bf::driveFrames.load();
+                if(onR173!=lastOnR173||flipsR173!=lastFlipsR173||resetsR173!=lastResetsR173||(framesR173!=lastFramesR173&&nowR173-lastRowR173>=10000)){
+                    lastOnR173=onR173;lastFlipsR173=flipsR173;lastResetsR173=resetsR173;lastFramesR173=framesR173;lastRowR173=nowR173;
+                    char m[320]{};std::snprintf(m,sizeof(m),"R173 BODY_FOLLOW on=%d freeLookDeg=%.0f context=%d turnedDeg=%.0f headToHenryDeg=%.0f viewYawHeldDeg=%.1f bodyYawHeldDeg=%.1f turnFrames=%llu signFlips=%llu resets=%llu",
+                        onR173,double(bf::clampDeg(bf::freeLookDeg.load())),bf::contextFresh(nowR173)?1:0,double(bf::turnedDeg.load()),double(bf::relativeDeg.load()),
+                        double(bf::applied.load())*57.29578,double(bf::appliedBody.load())*57.29578,(unsigned long long)framesR173,(unsigned long long)flipsR173,(unsigned long long)resetsR173);
+                    diagnostic_trace::Write(m);}
             }
             if(rung>0)ProbeCombatCvars50();
             {char c[2048]{};if(g_combat_cvars51.Apply(rung>0,c,sizeof(c))){diagnostic_trace::Write(c);KCD2VR_DIAG_LOG(Bug,warning,"{}",c);}} // V66.178R51
@@ -8296,7 +8317,8 @@ void Mod::Run()
         Input palmInput36{};palmInput36.now=GetTickCount64();
         // R141: Minimal HUD keeps the palm glance (left palm compass, right palm health/stamina) even with the Immersive HUD switch off.
         const bool minimalR141=ui_minimal_hud_r141::enabled.load(std::memory_order_acquire);
-        palmInput36.enabled=ui_minimal_hud_r141::PalmEnabled(vr_contextual_hud_.load(),minimalR141);
+        // R192: the palm glance is its own switch (VrPalmLookR192) and never runs in the NORMAL HUD (both modes off).
+        palmInput36.enabled=ui_palm_look_r192::Active(vr_contextual_hud_.load(),minimalR141,ui_palm_look_r192::enabled.load(std::memory_order_acquire));
         palmInput36.vrik=visual_selection59c7f::Selected(frik_pose_probe::CalibrationReady(),frik_pose_probe::CombatCensusMode(),frik_pose_probe::FinalSkinTestMode());
         palmInput36.gameplay=!ui89_policy.BlocksWorldInteraction()&&!mis_menu_after_frame&&!pause_overlay_scene&&!death_overlay_scene;
         if(xr_manager_)xr_manager_->SetHudLagGameplay(palmInput36.gameplay&&!theater_presented&&!dialogue_active); // C22b: lag only in free gameplay
@@ -9403,6 +9425,37 @@ static kcd2vr::corpse_grip_cg1::Gate corpseGripGateRightW5;
             talkPadCtxH4.lb_prompt_query_r153=&native_input_look_lab::QueryLbPromptHint153; // R153: hold to look / watch on X
             talkPadCtxH4.close_tutorial_r156=kcd2vr::close_tutorial_r156::Open(std::uint64_t(GetTickCount64()),kcd2vr::close_tutorial_r156::mapEnabledMs.load(std::memory_order_acquire)); // R156: tutorial screen open -> right B = held xi_back
             auto pad=native_vr_pad_premap::Build(padLeft5916c3,padRight5916c3,talkPadCtxH4);
+            // R187 (Miki 10 Nov: "look there should be back to X ... we have lost a lot from taking away the LT"): the R167
+            // left trigger -> LB route is gone, LT is always LT again. the X routes (R153/R156 hold X = look / watch, R147
+            // X tap = Follow) were never changed and do it as before R167.
+            { // R175: crossbow / gun - the right trigger alone shoots (ranged_rt_fire_r175.h): RT press = LT aim at once, RT after
+              // 250 ms, aim kept 150 ms after the shot. a press with your own LT held stays yours. not in menus / chooser / activities.
+                namespace rf=kcd2vr::ranged_rt_fire_r175;static rf::State stateR175{};static bool toldR175=false;
+                const auto nowR175=std::uint64_t(GetTickCount64());
+                const bool blockedR175=talkPadCtxH4.vr_menu||talkPadCtxH4.system_menu||talkPadCtxH4.quick_talk_open54||padCtx.theater||
+                    padCtx.dialogue_navigation||padCtx.semantic_minigame||padCtx.apse_ui||activity163.nativeControls||!palmInput36.gameplay;
+                const bool onR175=rf::enabled.load(std::memory_order_acquire);
+                const bool rangedR175=onR175&&frik_pose_probe::HeldCrossbowOrGunR175();
+                const auto outR175=rf::step(stateR175,onR175,rangedR175,pad.rt,pad.lt,blockedR175,nowR175);
+                if(outR175.own){pad.lt=outR175.lt;pad.rt=outR175.rt;pad.lb=false;}
+                if(outR175.own!=toldR175){toldR175=outR175.own;
+                    diagnostic_trace::Write(outR175.own?"R175 RANGED_RT_FIRE right trigger -> LT aim + RT shot (crossbow / gun)":"R175 RANGED_RT_FIRE released");}
+            }
+            { // R176 stone throwing (stone_throw_r176.h): crouched + empty left hand raised to head height + left Grip = RB held
+              // (the game's distract_init / aim), Grip released = RB up = decoy_throw. A cancels (the game's decoy_abort).
+                namespace st=kcd2vr::stone_throw_r176;static st::State stateR176{};static bool toldR176=false;
+                const auto nowR176=std::uint64_t(GetTickCount64());
+                const bool onR176=st::enabled.load(std::memory_order_acquire);
+                const bool blockedR176=talkPadCtxH4.vr_menu||talkPadCtxH4.system_menu||talkPadCtxH4.quick_talk_open54||padCtx.theater||
+                    padCtx.dialogue_navigation||padCtx.semantic_minigame||padCtx.apse_ui||activity163.nativeControls||!palmInput36.gameplay;
+                const bool crouchedR176=st::fresh(st::crouchMapMs.load(std::memory_order_acquire),nowR176)||st::fresh(st::distractMapMs.load(std::memory_order_acquire),nowR176);
+                const float gripR176=padLeft5916c3.active?padLeft5916c3.grip:0.f;
+                const bool poseR176=onR176&&gripR176>st::kPress&&!stateR176.down&&frik_pose_probe::StoneThrowPoseR176(); // read only when a press starts
+                const bool rbR176=st::step(stateR176,onR176,crouchedR176,poseR176,gripR176,blockedR176);
+                if(rbR176)pad.rb=true;
+                if(rbR176!=toldR176){toldR176=rbR176;
+                    diagnostic_trace::Write(rbR176?"R176 STONE_THROW left grip -> RB held (crouched, hand raised: the game's stone aim)":"R176 STONE_THROW RB released (the game throws)");}
+            }
             {static unsigned char prevR147=0;if(pad.rideFollowLbR147&&!prevR147)diagnostic_trace::Write(pad.rideFollowLbR147==1?
                 "R147 RIDE_FOLLOW X tap -> LB (the follow prompt was listed; R155: on foot too)":"R147 RIDE_FOLLOW mounted X tap -> LB (prompt list not readable, mounted fallback)");
              prevR147=pad.rideFollowLbR147;
@@ -9580,6 +9633,16 @@ static kcd2vr::corpse_grip_cg1::Gate corpseGripGateRightW5;
                     if(signR133&&std::fabs(pad.rx)<.05f&&!r::userTurning(GetTickCount64())){
                         pad.rx=r::bleedRx(offsetR133,signR133);r::bleedFrames.fetch_add(1,std::memory_order_relaxed);}
                 }
+            }
+            {   // R173 body follows the headset: the camera hook asks for a turn (rx) when the head is past the free look
+                // angle; the game turns Henry with its own stick turn and the hook takes the same yaw out of the view.
+                // only when the player's right stick is idle, never in a menu / dialogue / minigame, never while R133 bleeds.
+                namespace bf=kcd2vr::body_follow_r173;const auto nowR173=std::uint64_t(GetTickCount64());
+                const float want=bf::enabled.load(std::memory_order_acquire)?bf::rxNow(nowR173):0.f;
+                if(want!=0.f&&pad.gameplay_r133&&!padCtx.vr_menu&&!padCtx.theater&&!padCtx.system_menu&&!padCtx.dialogue_navigation&&
+                   !padCtx.semantic_minigame&&!padCtx.apse_ui&&!padCtx.back_context&&xr_head_valid&&palmInput36.gameplay&&
+                   std::fabs(pad.rx)<.05f&&kcd2vr::free_targeting_r133::bleedSign.load(std::memory_order_acquire)==0&&
+                   !kcd2vr::free_targeting_r133::ownsTurn(nowR173))pad.rx=std::clamp(want,-1.f,1.f);
             }
             ApplyRoomscalePad58(pad,padCtx,xr_head_valid&&palmInput36.gameplay); // Fresh XR validity and this frame's gameplay owner.
             frik_pose_probe::PublishMoveStick160(pad.lx,pad.ly); // R160: own walking frees the attack counter-step

@@ -1,3 +1,4 @@
+#include "vrik/body_follow_r173.h" // R173: body follows the headset (CalFrameR133 adds its yaw)
 #include "vrik/fist_lt_r138.h" // R138: closed empty left fist is never native LT
 #include "vrik/impale_death_speed_r106.h" // R106: impale fast death (used by native_impale_part.inl)
 #include "vrik/start_r111.h" // R111: start at Henry's eyes (StandingEyeShift43, session re-seat)
@@ -115,6 +116,7 @@
 #include "diagnostics/outcome_chain23.h" // C23b OUTCOME_CHAIN receipts (read-only)
 #include "vrik/pose_math.h"
 #include "vrik/physical_weapon.h"
+#include "vrik/chest_back_r183.h" // R183: trunk behind the view (pose_tracking_goals.inl)
 #include "vrik/native_rejoin_r28.h"
 #include "diagnostics/hit_chain_c54r3.h"
 #include "diagnostics/vrik_trace_h29.h"
@@ -854,7 +856,7 @@ std::atomic<std::uint64_t> g_ctx_packed_last_logged{~0ull};
 struct CalFrameR133T {float x,y,z,w;template<class Q> operator Q() const noexcept {return Q{x,y,z,w};}};
 static CalFrameR133T CalFrameR133() noexcept {
     float q[4]{g_cal_frame_qx.load(),g_cal_frame_qy.load(),g_cal_frame_qz.load(),g_cal_frame_qw.load()};
-    kcd2vr::free_targeting_r133::yawFrame(q,kcd2vr::free_targeting_r133::offsetBody.load(std::memory_order_acquire));
+    kcd2vr::free_targeting_r133::yawFrame(q,double(kcd2vr::body_follow_r173::bodyTotal.load(std::memory_order_acquire))); // R174: the one view-following body yaw (R133 + R173; 0 = calibrated frame)
     return {q[0],q[1],q[2],q[3]};
 }
 std::atomic<std::uint64_t> g_last_setik_tick{0};
@@ -4209,7 +4211,9 @@ static void NativeRhythmTick178() noexcept {
         // applies Henry's skills, the weapon stats and the armour - nothing is scaled twice here.
         const double weight5916=std::clamp(gf.profiles[s].weight,0.3,6.0);
         const double meff5916=weight5916*(r.kind==1?0.9:0.55);
-        const double joules5916=0.5*meff5916*r.speed*r.speed;
+        // R178 (weapon_feel_r178.h): a wrist flick (hand almost still, point fast) carries less of the arm behind it
+        const double armR178=kcd2vr::weapon_feel_r178::armPower.load(std::memory_order_relaxed)?kcd2vr::weapon_feel_r178::energyScale(r.handSpeedR178,r.pointSpeedR178):1.;
+        const double joules5916=0.5*meff5916*r.speed*r.speed*armR178;
         const float energy=float(std::clamp(joules5916/21.6,0.05,1.0));
         kcd2vr::contact59c7g::Metadata metadata59c7g{r.collider,r.bodyMaterial,r.feature59c7g,r.twoHands59c7g,gf.profiles[s].classId,gf.profiles[1-s].shield176(),r.originZone47};
         metadata59c7g.goreCutD56=r.goreCutD56;
@@ -4218,7 +4222,7 @@ static void NativeRhythmTick178() noexcept {
         combat_diag_probe::NoteImpactPower59c8(r.sample,float(joules5916/double(g_strike_reference_j59c9.load(std::memory_order_relaxed))),r.twoHands59c7g); // R59.16C9C: reference = Miki's own full stroke (INI VrStrikeReferenceJ; 13 Oct median ratio 3.5 x 21.6 J) // C7G merge: support at this impact, not a later pose
         const bool queued=fresh&&(weaponItem43?combat_diag_probe::GeometryWeaponContactSubmit178r43(r.entityId,pos,energy,r.kind,r.part,r.surfaceIdx,r.tick,r.key,r.generation,r.epoch,r.request,r.sample,r.gesture59c3)
             :combat_diag_probe::GeometryHitSubmit178r27(r.entityId,pos,energy,r.kind,r.part,r.surfaceIdx,r.tick,r.key,r.generation,r.epoch,r.request,r.sample,r.gesture59c3,&metadata59c7g));
-        char m[300]{};std::snprintf(m,sizeof(m),"V66.178R30 GEOM_IMPACT side=%c speed=%.2f energy=%.2f kind=%s entity=%u body=%s part=%d surface=%d pos=(%.2f,%.2f,%.2f) record=IMMUTABLE fresh=%d queued=%d",s?'L':'R',r.speed,energy,r.kind==0?"CUT":r.kind==1?"THRUST":"UNKNOWN",r.entityId,n::name(n::Body(r.body)),r.part,r.surfaceIdx,pos[0],pos[1],pos[2],fresh?1:0,queued?1:0);diagnostic_trace::Write(m);}}
+        char m[340]{};std::snprintf(m,sizeof(m),"V66.178R30 GEOM_IMPACT side=%c speed=%.2f arm=%.2f hand/point=%.2f energy=%.2f kind=%s entity=%u body=%s part=%d surface=%d pos=(%.2f,%.2f,%.2f) record=IMMUTABLE fresh=%d queued=%d",s?'L':'R',r.speed,armR178,r.pointSpeedR178>0&&r.handSpeedR178>=0?r.handSpeedR178/r.pointSpeedR178:-1.,energy,r.kind==0?"CUT":r.kind==1?"THRUST":"UNKNOWN",r.entityId,n::name(n::Body(r.body)),r.part,r.surfaceIdx,pos[0],pos[1],pos[2],fresh?1:0,queued?1:0);diagnostic_trace::Write(m);}}
     // V66.178R24: wall/object sparks from the IMPACT itself (speed >= 2 m/s against a known surface), not from an
     // accepted native strike. A sword hitting a wall is not an attack; the material effect is the game's own
     // row for that weapon class/surface. One effect per impact (dedupe by impact tick; 150 ms limiter inside).
@@ -4371,7 +4375,7 @@ void PhysicalNativeFrameTick6698() noexcept {
     RangedDrawTickD72(std::uint64_t(GetTickCount64())); // current native ownership and exact visibility-debt retirement
     DrawGuardTickR120(std::uint64_t(GetTickCount64())); // R120: drawn weapon shown at its first VR placement or after 150 ms
     UtilityNativeTick54(std::uint64_t(GetTickCount64()));
-    ChestDaggerTick54(std::uint64_t(GetTickCount64())); // edge-only carried-item discovery
+    if(ChestDagger54())ChestDaggerTick54(std::uint64_t(GetTickCount64())); // R176: removed, never runs (its Lua is no longer in the pak)
     StowedBowAttachmentTick59c15(std::uint64_t(GetTickCount64())); // R59.16C10R15: the stowed bow is a character attachment, not an entity
     if(g_actionOwnerNativeTick59c15)g_actionOwnerNativeTick59c15(); // R59.16C10R15
 }
@@ -4413,12 +4417,32 @@ bool F4GestureInputOwned176() noexcept {
     }
     return true;
 }
+// R175: a crossbow (10/14/15) or a firearm (13) is in one of Henry's hands, from the same fresh equipment publication.
+bool HeldCrossbowOrGunR175() noexcept {
+    PhysEquipment6698 e{};const auto now=std::uint64_t(GetTickCount64());
+    if(!g_phys_equipment6698.read(e)||!e.valid||!e.tick||now<e.tick||now-e.tick>80||e.count<0||e.count>8)return false;
+    for(unsigned side=0;side<2;++side){
+        if(!e.handKnown[side]||!e.handKey[side])continue;
+        const int i=e.heldIndex[side];if(i<0||i>=e.count)continue;
+        const int c=e.items[i].profile.classId;
+        if(c==10||c==13||c==14||c==15)return true;
+    }
+    return false;
+}
 // R138: Henry's LEFT hand has no item in the copied equipment publication (stale/unknown = free: an empty-hand fist is
 // the common case; a weapon in the left hand keeps the R122 LT rule unchanged).
 static bool LeftHandItemFreeR138() noexcept {
     PhysEquipment6698 e{};const auto now=std::uint64_t(GetTickCount64());
     if(!g_phys_equipment6698.read(e)||!e.valid||!e.tick||now<e.tick||now-e.tick>80)return true;
     return !(e.handKnown[1]&&e.handKey[1]);
+}
+// R176 stone throw pose: Henry's left hand holds no item and the left controller is raised to about head height
+// (no more than 20 cm below the headset), fresh tracking. the knife pouch (hip / chest) and low grabs stay below it.
+bool StoneThrowPoseR176() noexcept {
+    if(!LeftHandItemFreeR138())return false;
+    TrackingSnapshot t{};const auto now=std::uint64_t(GetTickCount64());
+    if(!ReadTrackingSnapshot(t)||!t.head_valid||!t.left_valid||t.left_held||!t.tick||now<t.tick||now-t.tick>80)return false;
+    return t.left.y>=t.head.y-.20f; // XR space, y up
 }
 float FistTransportTrigger101(int side,float raw,bool tracked,bool menu,float grip) noexcept {
     // Only called by the mod input worker. During UI, clear no held state and

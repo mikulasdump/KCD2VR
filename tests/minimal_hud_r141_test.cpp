@@ -8,6 +8,7 @@
 #include "ui_gameplay_hud54.h"
 #include "subsystems/experimental/live_settings_d39.h"
 #include "release_menu_r92.h"
+#include "ui_palm_look_r192.h"
 #include <cstdio>
 #include <cstring>
 #include <cwchar>
@@ -176,18 +177,25 @@ int main(){
     }
     {   // 7. switches: Experiments GEAR 3 row 4, release page 3 row 4, VR HUD page rect, default OFF
         VrMenuState s{};ck(!s.live_d39.minimalHudR141&&!mh::enabled.load(),"default OFF");
-        const auto& rows=live::rows(live::kGearPage3R125);ck(rows[5].id==live::Id::MinimalHudR141&&rows[6].id==live::Id::HideTutorialsR141,"GEAR 3 rows 6 + 7");
-        ck(rows[3].id==live::Id::LockpickOpaqueR141&&rows[4].id==live::Id::EyeHoldR141,"GEAR 3 rows 4 + 5 = lockpick + eye hold (merged R141)");
-        unsigned selected=live::kGearPage3R125;const auto r=live::rowRect(5);
+        unsigned selected=live::pageOf(live::Id::MinimalHudR141);const auto& rows=live::rows(selected); // R184: VIEW page 1 (HUD) rows 3 + 4
+        ck(live::group(selected)==live::Group::View&&rows[2].id==live::Id::MinimalHudR141&&rows[3].id==live::Id::HideTutorialsR141,"VIEW 1 rows 3 + 4");
+        ck(live::group(live::pageOf(live::Id::LockpickOpaqueR141))==live::Group::View&&live::group(live::pageOf(live::Id::EyeHoldR141))==live::Group::View,"lockpick + eye hold on VIEW");
+        const auto r=live::rowRect(2);
         ck(live::dispatch(selected,r.l+2,r.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&s.live_d39.minimalHudR141,"toggle ON (never refused)");
-        wchar_t text[160]{};live::label(s,rows[5],text,160);ck(std::wcsstr(text,L"ON")!=nullptr,"label ON");
-        live::label(s,rows[6],text,160);ck(std::wcsstr(text,L"Minimal HUD hides")!=nullptr,"tutorial label tells Minimal HUD hides them");
+        wchar_t text[160]{};live::label(s,rows[2],text,160);ck(std::wcsstr(text,L"ON")!=nullptr,"label ON");
+        live::label(s,rows[3],text,160);ck(std::wcsstr(text,L"Minimal HUD hides")!=nullptr,"tutorial label tells Minimal HUD hides them");
         ck(live::dispatch(selected,r.l+2,r.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&!s.live_d39.minimalHudR141,"toggle OFF");
-        const auto t=live::rowRect(6);ck(!s.live_d39.hideTutorialsR141,"tutorials shown by default");
+        const auto t=live::rowRect(3);ck(!s.live_d39.hideTutorialsR141,"tutorials shown by default");
         ck(live::dispatch(selected,t.l+2,t.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&s.live_d39.hideTutorialsR141,"tutorials HIDDEN");
-        live::label(s,rows[6],text,160);ck(std::wcsstr(text,L"HIDDEN")!=nullptr,"label HIDDEN");
+        live::label(s,rows[3],text,160);ck(std::wcsstr(text,L"HIDDEN")!=nullptr,"label HIDDEN");
         ck(live::dispatch(selected,t.l+2,t.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&!s.live_d39.hideTutorialsR141,"tutorials SHOWN");
-        namespace rm=release_menu_r92;ck(rm::rows(2)[3].id==rm::Row::MinimalHud&&rm::rows(2)[4].id==rm::Row::Tutorials,"release page 3 rows 4 + 5");
+        namespace rm=release_menu_r92;ck(rm::rows(2)[0].id==rm::Row::EnemyPreset,"R193/R194: no HUD page on IMMERSION AND CONTROLS (all on the HUD menu)");
+        {auto h=s;h.contextual_hud=false;h.live_d39.minimalHudR141=false;ck(std::wcscmp(rm::value(h,rm::Row::HudMode),L"NORMAL")==0,"R192 NORMAL");
+         ck(rm::advance(h,rm::Row::HudMode)&&h.contextual_hud&&!h.live_d39.minimalHudR141,"R192 -> IMMERSIVE");
+         ck(rm::advance(h,rm::Row::HudMode)&&!h.contextual_hud&&h.live_d39.minimalHudR141,"R192 -> MINIMAL");
+         ck(rm::advance(h,rm::Row::HudMode)&&!h.contextual_hud&&!h.live_d39.minimalHudR141,"R192 -> NORMAL");
+         ck(h.live_d39.palmLookR192&&rm::advance(h,rm::Row::PalmLook)&&!h.live_d39.palmLookR192&&std::wcscmp(rm::value(h,rm::Row::PalmLook),L"OFF")==0,"R192 palm look toggles, default ON");
+         ck(!ui_palm_look_r192::Active(false,false,true)&&ui_palm_look_r192::Active(true,false,true)&&ui_palm_look_r192::Active(false,true,true)&&!ui_palm_look_r192::Active(true,true,false),"R192 palm look never in NORMAL, OFF = no glance");}
         ck(rm::advance(s,rm::Row::Tutorials)&&s.live_d39.hideTutorialsR141&&std::wcscmp(rm::value(s,rm::Row::Tutorials),L"HIDDEN")==0,"release tutorials HIDDEN");
         ck(rm::advance(s,rm::Row::Tutorials)&&!s.live_d39.hideTutorialsR141&&std::wcscmp(rm::value(s,rm::Row::Tutorials),L"SHOWN")==0,"release tutorials SHOWN");
         ck(rm::advance(s,rm::Row::MinimalHud)&&s.live_d39.minimalHudR141&&std::wcscmp(rm::value(s,rm::Row::MinimalHud),L"ON")==0,"release toggle ON");

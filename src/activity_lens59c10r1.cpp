@@ -1,3 +1,5 @@
+#include "subsystems/throw_drop/stone_throw_r176.h" // R176: crouch / distract map ticks
+#include "subsystems/hud_ui_controls/runtime/lt_prompt_lb_r167.h" // R167: Follow prompt map tick
 #include "activity_lens59c10r1.h"
 #include "activity_input163.h"
 #include "dialogue_presentation19c2.h"
@@ -82,7 +84,16 @@ void __fastcall View(void* self,void* output) {
      // BEFORE the first X tap (R155 needed one wasted tap to see the map through the OnAction detour).
      const auto hold=dialogue_input_owner19c3::inspectMap(base,"infinite_hold_interaction_init",
          [](std::uintptr_t address,auto& value){return Read(address,value);});
-     if(hold.known&&hold.enabled)kcd2vr::lb_prompt_x_r153::holdMapEnabledMs.store(now,std::memory_order_release);}
+     if(hold.known&&hold.enabled)kcd2vr::lb_prompt_x_r153::holdMapEnabledMs.store(now,std::memory_order_release);
+     // R167: the Follow prompt map, same reader, for the left trigger -> LB route (lt_prompt_lb_r167.h)
+     const auto follow=dialogue_input_owner19c3::inspectMap(base,"focus_follow_init_interactor",
+         [](std::uintptr_t address,auto& value){return Read(address,value);});
+     if(follow.known&&follow.enabled)kcd2vr::lt_prompt_lb_r167::followMapEnabledMs.store(now,std::memory_order_release);
+     // R176: crouched = the game's "crouch" map (distract_init on RB) or its "distract" map (the stone aim) is enabled
+     const auto crouchR176=dialogue_input_owner19c3::inspectMap(base,"crouch",[](std::uintptr_t address,auto& value){return Read(address,value);});
+     if(crouchR176.known&&crouchR176.enabled)kcd2vr::stone_throw_r176::crouchMapMs.store(now,std::memory_order_release);
+     const auto distractR176=dialogue_input_owner19c3::inspectMap(base,"distract",[](std::uintptr_t address,auto& value){return Read(address,value);});
+     if(distractR176.known&&distractR176.enabled)kcd2vr::stone_throw_r176::distractMapMs.store(now,std::memory_order_release);}
     {// R156: a full-screen tutorial is open exactly while the game enables its "close_tutorial" action map (xi_back only,
      // no VR button sends it - Miki could not close those screens). the same verified named-map walk as the dialog input
      // owner, bounded SEH reads, no native call; the pad premap turns the right B into a held xi_back while this is fresh.

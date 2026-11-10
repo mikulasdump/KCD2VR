@@ -13,6 +13,23 @@
 namespace kcd2vr::melee_grip_r123 {
 inline std::atomic<bool> enabled{true};
 inline constexpr const char* kKey="VrMeleeAuthoredGripR123";
+// R168 "Weapon in hand: depth" (Miki 9 Nov: "the weapon placement in the hand is slightly out", "2 cm inside the hand").
+// VrWristFromGripCm moves the whole hand along the controller (the weapon moves with it). this moves the WEAPON inside
+// the hand: the authored grip (R123) is the wrist pose in the weapon's frame; its position is moved toward the weapon
+// origin by depthCm (+ = the weapon sits deeper in the hand, toward the wrist / palm; - = further out), never closer
+// than kMinSpanM. only the R123 fixed melee grip (sword, axe, mace, dagger). live: the next grip sample uses it.
+inline constexpr const char* kDepthKey="VrMeleeGripDepthR168";
+inline std::atomic<float> depthCm{0.f};
+inline constexpr float kDepthMinCm=-2.f,kDepthMaxCm=4.f;
+inline constexpr double kMinSpanM=.01;
+constexpr float clampDepth(float cm) noexcept {return !(cm==cm)?0.f:cm<kDepthMinCm?kDepthMinCm:cm>kDepthMaxCm?kDepthMaxCm:cm;}
+// scale factor for the wrist position (length span metres) so that its length shrinks by depthCm (grows for -).
+inline double depthScale(double spanM,float cm) noexcept {
+    if(!(spanM>1e-6))return 1.0;
+    double want=spanM-double(clampDepth(cm))*.01;
+    if(want<kMinSpanM)want=kMinSpanM;
+    return want/spanM;
+}
 // melee weapons except shields (B4 reference already) and polearms (R26 slt_0 helper)
 constexpr bool eligible(int classId,bool melee,bool shield) noexcept {return melee&&!shield&&classId!=7;}
 inline constexpr double kRestPosM=.03,kRestAngleRad=.2618; // 3 cm / 15 deg

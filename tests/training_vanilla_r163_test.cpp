@@ -59,7 +59,6 @@ static int service(std::uint64_t now,NpcBlock39& lease){
 int main(){
     {   // 1. defaults + the gate table
         ck(tv::enabled.load()&&!tv::held.load(),"runtime default: switch ON, nothing held before the first tick");
-        VrMenuState s{};ck(s.live_d39.trainingVanillaNpcR163,"Settings default ON (= INI default true)");
         ck(!tv::wanted(false,false)&&!tv::wanted(false,true)&&!tv::wanted(true,false)&&tv::wanted(true,true),"held only with switch ON and a training fight");
         ck(std::strcmp(tv::kKey,"VrTrainingVanillaNpcR163")==0,"INI key");
     }
@@ -128,27 +127,26 @@ int main(){
         ck(service(now,lease)==1&&cvarValue==0&&!lease.owned,"ON edge: force block given back at once");
         fb::practiceWeapon.store(false);tv::held.store(false);
     }
-    {   // 7. Experiments: VRIK page 2 row 4 (next to R159 row 5), ON/OFF, never refused; the moved row and the repeated row
-        VrMenuState s{};unsigned selected=live::kHandsPage2D71;
-        const auto& rows=live::rows(selected);
-        ck(rows[3].id==live::Id::TrainingVanillaNpcR163&&!rows[3].readOnly&&!rows[3].session,"row 4 = the switch, saved");
-        ck(rows[4].id==live::Id::TutorialNativeHitsR159,"row 5 = R159 Tutorials, unchanged");
-        wchar_t text[200]{};live::label(s,rows[3],text,200);ck(std::wcsstr(text,L": ON (NPCs vanilla")!=nullptr&&std::wcslen(text)<100,"label ON (fits the 418 px row)");
-        const auto r=live::rowRect(3);int saved=0;
-        const auto click=[&]{return live::dispatch(selected,r.l+2,r.t+2,s,[](const VrMenuState&){return true;},[&]{++saved;return true;});};
-        ck(click()==live::Click::Changed&&!s.live_d39.trainingVanillaNpcR163&&saved==1,"-> OFF (never refused, saved)");
-        live::label(s,rows[3],text,200);ck(std::wcsstr(text,L": OFF (all NPC features run)")!=nullptr&&std::wcslen(text)<100,"label OFF");
-        ck(click()==live::Click::Changed&&s.live_d39.trainingVanillaNpcR163&&saved==2,"-> ON again");
-        bool timingOnMotion2=false,leanOnMotion2=false,leanOnBody2=false,timingOnHands2=false;
-        for(const auto& row:live::kMotionTrialsD69){timingOnMotion2|=row.id==live::Id::TimingLocationD64;leanOnMotion2|=row.id==live::Id::LeanHeightD70;}
-        for(const auto& row:live::kBodyTrialsD76)leanOnBody2|=row.id==live::Id::LeanHeightD70;
-        for(const auto& row:live::kHandTrialsD71)timingOnHands2|=row.id==live::Id::TimingLocationD64;
-        ck(timingOnMotion2&&!timingOnHands2,"F2 comparison boundary moved to VRIK MOTION page 2");
-        ck(!leanOnMotion2&&leanOnBody2,"the REPEATED Forward lean height row left MOTION page 2, still on BODY page 2");
-        // no switch lost: every Id that had a row still has one
-        std::set<unsigned> ids;for(unsigned n=0;n<=live::kObjectsPage3R158;++n)for(const auto& row:live::rows(n))ids.insert(unsigned(row.id));
-        ck(ids.count(unsigned(live::Id::TimingLocationD64))&&ids.count(unsigned(live::Id::LeanHeightD70))&&ids.count(unsigned(live::Id::TrainingVanillaNpcR163))&&
-           ids.count(unsigned(live::Id::TutorialNativeHitsR159)),"every switch still has a row");
+    {   // 7. R171: the switch has no row any more (always OFF, set by live_runtime_d40 LOAD); row 4 = Combo: wait for the next swing
+        const auto& rows=live::rows(live::pageOf(live::Id::ComboHoldR171));
+        ck(rows[0].id==live::Id::ComboHoldR171&&rows[1].id==live::Id::ComboHoldSecR171&&live::group(live::pageOf(live::Id::ComboHoldR171))==live::Group::Combat,"R184: COMBAT combos rows 1/2");
+        std::set<unsigned> ids;for(unsigned n=0;n<live::kPageCount;++n)for(const auto& row:live::rows(n))ids.insert(unsigned(row.id));
+        ck(!ids.count(unsigned(live::Id::TrainingVanillaNpcR163))&&!ids.count(unsigned(live::Id::TutorialNativeHitsR159)),"R171: both tutorial rows removed");
+        ck(!ids.count(unsigned(live::Id::TimingLocationD64))&&!ids.count(unsigned(live::Id::HandLeadMsD69))&&ids.count(unsigned(live::Id::LeanHeightD70)),"R173: F2 boundary + prediction time rows gone, lean height kept");
+        const auto& m2=live::rows(unsigned(live::Group::MotionD67));
+        ck(m2[0].id==live::Id::ChestBackR183&&m2[1].id==live::Id::BodyFollowR173&&m2[2].id==live::Id::BodyFollowDegR173,"R184: VRIK+ page 1 rows 1/2/3 = chest back + body follow");
+        ck(live::group(live::pageOf(live::Id::HandLeadD69))==live::Group::Hands,"extra hand prediction on VRIK (elbows + timing)");
+        VrMenuState s{};ck(!s.live_d39.bodyFollowR173&&s.live_d39.bodyFollowDegR173==45.f,"R173 defaults OFF / 45 deg (R177)");
+        ck(live::advance(s,live::Id::BodyFollowR173)&&s.live_d39.bodyFollowR173,"body follow -> ON");
+        ck(live::advance(s,live::Id::BodyFollowDegR173)&&s.live_d39.bodyFollowDegR173==60.f,"45 -> 60");
+        live::advance(s,live::Id::BodyFollowDegR173);ck(s.live_d39.bodyFollowDegR173==15.f,"60 -> 15");
+        wchar_t txt[200]{};live::label(s,m2[2],txt,200);ck(std::wcsstr(txt,L"15 deg")!=nullptr,"label 15 deg");
+        ck(!s.live_d39.handLeadD69,"prediction OFF");live::advance(s,live::Id::HandLeadD69);ck(s.live_d39.handLeadD69&&s.live_d39.handLeadMsD69==3.f,"OFF -> 3 ms");
+        for(int i=0;i<6;++i)live::advance(s,live::Id::HandLeadD69);ck(s.live_d39.handLeadD69&&s.live_d39.handLeadMsD69==33.f,"... -> 33 ms");
+        live::advance(s,live::Id::HandLeadD69);ck(!s.live_d39.handLeadD69,"33 -> OFF");
+        {const auto& vr=live::rows(live::pageOf(live::Id::HandLeadD69));for(const auto& r:vr)if(r.id==live::Id::HandLeadD69)live::label(s,r,txt,200);}ck(std::wcsstr(txt,L"OFF")!=nullptr,"label OFF");
+        s.live_d39.handLeadD69=true;s.live_d39.handLeadMsD69=11.f;{const auto& vr=live::rows(live::pageOf(live::Id::HandLeadD69));for(const auto& r:vr)if(r.id==live::Id::HandLeadD69)live::label(s,r,txt,200);}ck(std::wcsstr(txt,L"11 ms")!=nullptr,"label 11 ms");
+        ck(live::layoutValid(),"layout valid");
     }
     std::printf("training_vanilla_r163_test: %u/%u passed\n",total-fail,total);
     return fail?1:0;

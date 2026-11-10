@@ -39,11 +39,11 @@ int main(){
     CHECK(!sf::facingAway(true,false,180.f,0.f));
     CHECK(!sf::facingAway(true,true,NAN,0.f));
     CHECK(!sf::facingAway(true,true,180.f,NAN));
-    // with the R111/R112 episode: head away = Recenter at once (no 10 s wait), still only after the 1.5 s settle
+    // with the R111/R112 episode: head away = Recenter at once (no 10 s wait), still only after the settle (R181: 0.5 s)
     {sr::Episode e{};std::uint64_t t=5000;
      CHECK(sr::decide(e,3,false,true,t,false,true,true,true,false,true)==Act::Wait);
-     CHECK(sr::decide(e,3,false,true,t+1000,false,true,true,true,false,true)==Act::Wait);
-     CHECK(sr::decide(e,3,false,true,t+1600,false,true,true,true,false,true)==Act::Recenter);}
+     CHECK(sr::decide(e,3,false,true,t+300,false,true,true,true,false,true)==Act::Wait);
+     CHECK(sr::decide(e,3,false,true,t+600,false,true,true,true,false,true)==Act::Recenter);}
     // F8 calibration running: wait, even with the head away
     {sr::Episode e{};std::uint64_t t=5000;(void)sr::decide(e,4,false,true,t,false,true,true,true,true,true);
      CHECK(sr::decide(e,4,false,true,t+3000,false,true,true,true,true,true)==Act::Wait);}
@@ -88,7 +88,7 @@ int main(){
     sf::setRuntime(nullptr);CHECK(std::string_view(sf::runtime())=="<unknown>");
     // the Experiments row that owns it exists (BODY page 2) and is ON by default
     {live_settings_d39::Settings d{};CHECK(d.startHenryEyesR111);bool row=false;
-     for(const auto& r:live_settings_d39::kBodyTrialsD76)if(r.id==live_settings_d39::Id::StartHenryEyesR111)row=true;CHECK(row);}
+     for(const auto& r:live_settings_d39::rows(live_settings_d39::pageOf(live_settings_d39::Id::StartHenryEyesR111)))if(r.id==live_settings_d39::Id::StartHenryEyesR111)row=true;CHECK(row);}
     if(fails){std::printf("start_facing_r148_test: %d FAIL\n",fails);return 1;}
     std::printf("start_facing_r148_test: OK\n");return 0;
 }

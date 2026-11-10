@@ -45,6 +45,21 @@ int main(){
  CHECK(a::enter(ptr(11),1002,out)==a::Refusal::NoRelease);
  // Retiring an older callback must not cancel a newer exact release.
  auto old=bind();auto next=bind(ptr(12));a::retire(old.serial);CHECK(a::enter(ptr(12),1020,out)==a::Refusal::None);
+ // R172: no firing action on the release stack -> the player's own Shoot takes the pending release once
+ {a::ReleaseScope r(make());CHECK(!r.finish(true));}
+ {a::Snapshot q{};CHECK(a::takePending(ptr(7),ptr(3),1100,q)==a::Refusal::ActorMismatch);CHECK(a::takePending(ptr(1),ptr(9),1100,q)==a::Refusal::LauncherMismatch);
+  CHECK(a::takePending(ptr(1),nullptr,1100,q)==a::Refusal::LauncherMismatch);
+  CHECK(a::takePending(ptr(1),ptr(3),1100,q)==a::Refusal::None&&q.key==4&&q.dir[1]==1);CHECK(a::takePending(ptr(1),ptr(3),1101,q)==a::Refusal::NoRelease);}
+ {a::ReleaseScope r(make());CHECK(!r.finish(true));}{a::Snapshot q{};CHECK(a::takePending(ptr(1),ptr(3),2501,q)==a::Refusal::Stale);CHECK(a::takePending(ptr(1),ptr(3),1100,q)==a::Refusal::NoRelease);}
+ {a::ReleaseScope r(make());CHECK(!r.finish(true));}context=false;{a::Snapshot q{};CHECK(a::takePending(ptr(1),ptr(3),1100,q)==a::Refusal::ContextLost);}context=true;
+ {a::ReleaseScope r(make());CHECK(!r.finish(true));}a::retire();{a::Snapshot q{};CHECK(a::takePending(ptr(1),ptr(3),1100,q)==a::Refusal::NoRelease);} // cancel / newer release
+ {auto noOwner=make();noOwner.ownerInterface=nullptr;a::ReleaseScope r(noOwner);CHECK(r.valid);a::bindConstructed(ptr(14),ptr(2));CHECK(!r.finish(true));}{a::Snapshot q{};CHECK(a::takePending(ptr(1),ptr(3),1100,q)==a::Refusal::None);} // R174: no charge owner: no exact bind, the pending Shoot still aims
+ {auto bad=make();bad.key=0;a::ReleaseScope r(bad);CHECK(!r.valid);CHECK(!r.finish(true));}{a::Snapshot q{};CHECK(a::takePending(ptr(1),ptr(3),1100,q)==a::Refusal::NoRelease);}
+ {auto noL=make();noL.launcher=nullptr;a::ReleaseScope r(noL);CHECK(!r.finish(true));}{a::Snapshot q{};CHECK(a::takePending(ptr(1),ptr(5),1100,q)==a::Refusal::None);} // launcher not read: any launcher of the same player
+ {a::ReleaseScope r(make());a::Snapshot q{};CHECK(a::takePending(ptr(1),ptr(3),1001,q)==a::Refusal::None);CHECK(!r.finish(true));} // Shoot inside the release call
+ o::SetBowPhysicalAim(false);{a::ReleaseScope r(make());CHECK(!r.finish(true));}{a::Snapshot q{};CHECK(a::takePending(ptr(1),ptr(3),1100,q)==a::Refusal::Disabled);}o::SetBowPhysicalAim(true);
+ bind();CHECK(a::enter(ptr(11),1001,out)==a::Refusal::None);{a::ShotScope scope(&out);a::Snapshot q{};CHECK(a::take(ptr(1),ptr(3),q)==a::Refusal::None);}
+ {a::Snapshot q{};CHECK(a::takePending(ptr(1),ptr(3),1002,q)==a::Refusal::Consumed);} // a bound shot is never used twice
  // Actual committed jump route: target E9 -> relay FF25 -> our callback.
  std::array<unsigned char,512> mem{};const std::uintptr_t base=0x10000,target=base+16,relay=base+128,detour=0x12345678;
  mem[16]=0xe9;std::int32_t d=std::int32_t(relay-target-5);std::memcpy(mem.data()+17,&d,4);

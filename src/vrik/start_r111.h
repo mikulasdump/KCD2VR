@@ -32,7 +32,7 @@ namespace kcd2vr::start_r111 {
 inline std::atomic<bool> vrikOnStart{true};
 inline std::atomic<bool> henryEyes{true};
 inline std::atomic<bool> worldReady{false}; // mod loop: ordinary gameplay frame, no menu/dialogue/cutscene/UI owner
-constexpr std::uint64_t kSettleMs=1500; // world must be up this long after a load before we act
+constexpr std::uint64_t kSettleMs=500;  // world must be up this long after a load before we act (R181: was 1500, Miki: "it takes a while to come up")
 constexpr std::uint64_t kRetryMs=2000;  // a refused VRIK start tries again this often
 // R112: automatic recenter gate (LOCAL space = the player's own runtime center)
 constexpr float kCenterSideM=.15f;      // head within this horizontal distance of the runtime center

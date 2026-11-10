@@ -172,6 +172,7 @@ static bool TrackedFrameCameraCoreE1(float x,float y,float z,float fx,float fy,f
     ModelWorld6692 current{};
     if(!ReadModelWorld6692(reinterpret_cast<void*>(packet.stamp.actor),current)||
        std::fabs(current.scale-frame.scale)>1e-6){failedCamera48.reason="TRACKED_CAMERA_CURRENT_ROOT_UNAVAILABLE";return false;}
+    const kcd2vr::pose_core::Vec3 producerRootR191=frame.root;const kcd2vr::pose_core::Quat producerRotR191=frame.rotation; // R191
     frame.root={current.t.x,current.t.y,current.t.z};frame.rotation={current.q.x,current.q.y,current.q.z,current.q.w};
     // A native activity may begin after this ordinary body's publication. Its
     // current authored eye is not a neutral measurement for that older frame.
@@ -227,6 +228,14 @@ static bool TrackedFrameCameraCoreE1(float x,float y,float z,float fx,float fy,f
     if(!kcd2vr::native_roomscale_d76::SameSerial(kcd2vr::native_roomscale_d76::Surface::Character,packet.stamp.actor,current.roomOriginD76.serial))return false;
     if(roomOriginD76)*roomOriginD76=current.roomOriginD76;
     state=staged;ox=float(eye.x);oy=float(eye.y);oz=float(eye.z);hx=float(forward.x);hy=float(forward.y);
+    {   // R191 (root_lead_r191.h): the skinned body is drawn one root step further than this current root (hands ahead of
+        // the eye while walking forward, behind while walking back). the eye moves with that step x VrBodyLeadR191.
+        static kcd2vr::root_lead_r191::State leadStateR193; // R193: smoothed step, shared by both calls of a frame
+        const auto leadR191=kcd2vr::root_lead_r191::make(leadStateR193,packet.stamp.sample,producerRotR191,producerRootR191,frame.rotation,frame.root,
+            kcd2vr::root_lead_r191::cycles.load(std::memory_order_relaxed));
+        if(leadR191.on){const auto e=kcd2vr::root_lead_r191::point(leadR191,eye);
+            if(kcd2vr::pose_core::finite(e)){ox=float(e.x);oy=float(e.y);oz=float(e.z);}}
+    }
     {   // R133: Henry's root yaw from this same current-root read, for the FREE PLUS body hold in camera_hook.
         const double qx=current.q.x,qy=current.q.y,qz=current.q.z,qw=current.q.w;
         const double rfx=2*(qx*qy-qw*qz),rfy=1-2*(qx*qx+qz*qz);

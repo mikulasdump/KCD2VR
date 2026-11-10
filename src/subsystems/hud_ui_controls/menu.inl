@@ -81,7 +81,7 @@ if(PtIn(kIxGestures,x,y)){ s.gesture_talk=!s.gesture_talk; done(s.gesture_talk?"
             DrawCheck(dc,denseFont,kHudStatus170,s.hud_status_icons_visible,L"Status icons");
         }
         if(!s.hud_native_canvas_fit&&!(s.auto_correct_hud||s.hud_corrected_active)){DrawButton(dc,font_small_,kV4UiReset,L"RESET LAYOUT",RGB(176,148,98)); DrawButton(dc,font_small_,kV4UiApply,L"APPLY + SAVE",kAccent);}
-        DrawCheck(dc,denseFont,kContextualHud162r1,s.contextual_hud,L"Immersive HUD (palm look)");
+        DrawCheck(dc,denseFont,kContextualHud162r1,s.contextual_hud,L"Immersive HUD");
         DrawCheck(dc,denseFont,kMinimalHudR141,s.live_d39.minimalHudR141,L"Minimal HUD"); // R141 VrMinimalHudR141
         DrawCheck(dc,denseFont,kHudLag22,s.hud_lag_on,L"HUD follows your head a little slower"); // C22b
         DrawCheck(dc,denseFont,kHudQuickSlotsR115,s.quick_slots_on_selection_r115,L"Weapon / potion slots only while selecting (3 s)"); // R115

@@ -7,7 +7,9 @@ static bool PhysChargeOwnedAction175(void* action,bool canRemember) noexcept {
     __try {
         void* actor=reinterpret_cast<void*(__fastcall*)(void*)>(WhBase()+0x9115E0)(static_cast<unsigned char*>(action)+0x58);
         if(actor!=player||g_phys_charge_player175.load(std::memory_order_acquire)!=player)return false;
-        if(canRemember)g_phys_charge_action175.store(action,std::memory_order_release);
+        // R174: remember also when the owner lock is busy (9 Nov 19:30 log: 3 of 3 shots NO_NATIVE_CHARGE_ACTION). this is only
+        // the atomic identity of Henry's own charge action (type + actor checked above), no native state is touched here.
+        (void)canRemember;g_phys_charge_action175.store(action,std::memory_order_release);
         return true;
     }__except(EXCEPTION_EXECUTE_HANDLER){return false;}
 }

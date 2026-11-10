@@ -121,6 +121,26 @@ int main(){
      in.userYaw=10*D;in.reset=true;r::step(h,in);ck(h.view==0,"recenter drops an own turn");
      in.reset=false;in.modePlus=false;in.userYaw=10*D;ck(r::step(h,in)==r::Step::Off&&h.view==0,"mode 0: own turn never applied");
      in.modePlus=true;in.userYaw=std::nan("");r::step(h,in);ck(h.view==0,"garbage yaw ignored");}
+    {// R186 turn limit: attacked from behind, the game turns Henry 180 deg while your head stays: only 90 absorbed
+     r::Hold h{};r::Input in{};in.modePlus=true;in.context=true;in.engaged=true;in.haveRoot=true;in.headValid=true;in.headYaw=0;
+     double cam=0;std::uint64_t t=1;in.cameraYaw=cam;in.rootYaw=cam;in.now=t;r::step(h,in);
+     for(int i=0;i<60;++i){cam+=3*D;in.cameraYaw=cam;in.rootYaw=cam;in.now=t+=11;r::step(h,in);}
+     ck(near(std::fabs(h.view),90*D,1e-6),"180 deg game turn: view holds only 90 (the rest turned the view)");
+     ck(near(std::fabs(r::wrap(h.view+in.headYaw)),90*D,1e-6),"Henry never more than 90 deg from your head");
+     // you turn your head toward the attacker (left, + yaw): Henry is in front of you again, the next game turn is absorbed
+     in.headYaw=90*D;cam+=3*D;in.cameraYaw=cam;in.rootYaw=cam;in.now=t+=11;r::step(h,in);
+     ck(std::fabs(r::wrap(h.view+in.headYaw))<6*D,"head turned toward him: the game turn is absorbed again");
+     // the game turns back toward you: always absorbed
+     in.headYaw=0;const double before=h.view;cam-=3*D;in.cameraYaw=cam;in.rootYaw=cam;in.now=t+=11;r::step(h,in);
+     ck(near(h.view,before+3*D,1e-9),"turning back toward you: absorbed in full");
+     // own stick turn: never limited
+     {const double v0=h.view;in.ownTurn=true;for(int k=0;k<4;++k){in.userYaw=-30*D;in.now=t+=11;r::step(h,in);}ck(near(h.view,r::wrap(v0-120*D),1e-9)&&std::fabs(r::wrap(h.view+in.headYaw))>100*D,"own stick turns (4 x 30 deg) pass the limit in full");in.userYaw=0;in.ownTurn=false;}
+     r::turnLimitDeg=0;r::Hold g{};in={};in.modePlus=true;in.context=true;in.engaged=true;in.headValid=true;cam=0;in.cameraYaw=0;in.now=1;r::step(g,in);
+     for(int i=0;i<50;++i){cam+=3*D;in.cameraYaw=cam;in.now+=11;r::step(g,in);}ck(near(std::fabs(g.view),150*D,1e-6),"limit 0 = old: all absorbed");
+     r::turnLimitDeg=90;
+     ck(near(r::limitedAbsorb(80*D,20*D,90*D),20*D,1e-9)&&near(r::limitedAbsorb(80*D,-20*D,90*D),-10*D,1e-9),"fills up to the edge only");
+     ck(r::limitedAbsorb(95*D,-5*D,90*D)==0&&near(r::limitedAbsorb(95*D,5*D,90*D),5*D,1e-9),"at the edge: growing none, shrinking all");
+     ck(r::clampLimit(500)==180.f&&r::clampLimit(std::nanf(""))==90.f,"clamp");}
     // gates and conversions
     ck(!r::ownsStickTurn(0,true,true,true,true,true),"mode 0 (game lock) never takes the stick");
     ck(r::ownsStickTurn(1,true,true,true,true,true)&&r::ownsStickTurn(2,true,true,true,true,true),"modes 1 and 2 take the stick in a locked fight");

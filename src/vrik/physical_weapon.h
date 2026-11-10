@@ -32,6 +32,10 @@
 #include "decap_joint44.h" // C44: pure loose-neck part (layout, markers, parameter build), used by gore32.inl
 #include "body_combo59c7g.h"
 #include "weapon_dynamics177.h"
+#include "weapon_feel_r178.h" // R178 handle pivot + arm swing power
+#include "stab_contact_r189.h" // R189 contact keeps its committed attack for 150 ms
+#include "weapon_lead_r180.h" // R180 weapon drawn ahead with the hand (physical_native.inl placement)
+#include "root_lead_r191.h" // R191 camera eye + drawn weapon on the predicted root (tracked_camera_service.inl, physical_native.inl)
 #include "swing_effort59c14.h"
 #include "motion_time.h"
 #include "tracked_frame51.h"
@@ -449,6 +453,7 @@ struct BowObservation116 { BowReason116 reason{};double gap=0,along=0,lateral=0,
 // V66.178R30 (R28 review F02): one immutable completed-impact record (see Output::impactRecord178r30).
 struct ImpactRecord178r30 {std::uintptr_t collider=0;std::uint64_t gesture59c3=0;std::uint64_t tick=0,key=0,generation=0,epoch=0,request=0,sample=0;double speed=0;std::uint32_t entityId=0;int body=0,part=-1,surfaceIdx=-1,kind=-1;int bodyMaterial=-1;Vec3 point{},normal{};bool valid=false;int feature59c7g=0;bool twoHands59c7g=false;
     double effortScale19=0,effortMass19=0;bool effortKnown19=false;int originZone47=-1;
+    double handSpeedR178=-1,pointSpeedR178=-1; // R178: wrist and struck-point speed at the impact (model units / s), -1 unknown
     gore_cut_d56::Evidence goreCutD56{};
 }; // C7G: copied struck feature, never inferred from the current later pose
 // Same technique-useful energy model as the recognizer's commit. Capture the
@@ -2164,7 +2169,7 @@ Output step(State& state,const Input& in,const std::array<Profile,2>& profiles,S
         const bool retainedGestureH26=committedH26.gesture&&s.intentReady&&s.relativeIntentReady&&
             !s.guard117&&(!in.requirePrimaryGrip114||in.grip[side]>.25)&&
             modelSpeedH26>.25&&std::isfinite(modelSpeedH26)&&trackingSpeedH26>.25&&std::isfinite(trackingSpeedH26)&&
-            (normal_hybrid_intent_h31(in)?(committedH26.forwardTickH8==in.tick&&committedH26.forwardSampleH8==in.sample):
+            (normal_hybrid_intent_h31(in)?kcd2vr::stab_contact_r189::recentForward(committedH26.forwardTickH8,committedH26.forwardSampleH8,in.tick,in.sample): // R189
              (m::dot(m::unit(modelMotionH26).value_or(Vec3{}),committedH26.modelDirection)>.25&&
               m::dot(m::unit(trackingMotionH26).value_or(Vec3{}),committedH26.trackingDirection)>.25));
         const Vec3 supportHandDelta63=stablePair63?intentOtherModelH30.p-s.supportIntentHand63:Vec3{};
@@ -2413,6 +2418,18 @@ Output step(State& state,const Input& in,const std::array<Profile,2>& profiles,S
             const bool anchoredCandidateD70=rigidPolicyD69||(p.melee()&&kcd2vr::held_motion_d67::gripAnchored());
             if(anchoredCandidateD70){
                 pivot=(in.supportConstraint130&&supportEngaged19c3)?point(desired,p.grip[side].p):primary.p;
+                // R178 handle pivot (weapon_feel_r178.h): the rotation lag turns around the handle centre line next to
+                // the wrist, not around the wrist, so the handle does not slide in the fist. one hand only (a two-hand
+                // constraint already places the grip from both hands). no lag = no shift.
+                if(!(in.supportConstraint130&&supportEngaged19c3)&&p.melee()&&!p.shield176()&&
+                   kcd2vr::weapon_feel_r178::handlePivot.load(std::memory_order_relaxed)){
+                    namespace wf=kcd2vr::weapon_feel_r178;const Vec3 g=p.grip[side].p;wf::V h{};
+                    if(wf::handlePoint({g.x,g.y,g.z},{p.tip.x,p.tip.y,p.tip.z},h)){
+                        const Vec3 hg{h.x-g.x,h.y-g.y,h.z-g.z};
+                        const Vec3 shift=limited(m::rotate(driveTarget,hg)-m::rotate(q,hg),wf::kMaxShiftM);
+                        if(m::finite(shift))pivot=pivot+shift;
+                    }
+                }
                 anchoredRejoinD70=contactRejoinR9;
                 rejoinControllerVelocityD70=rejoinTargetVelocityR9;
             }else if(!s.wasBlocked&&!contactRejoinR9) pivot=primary.p+limited(pivot-primary.p,maxLinearError);
@@ -2594,7 +2611,9 @@ Output step(State& state,const Input& in,const std::array<Profile,2>& profiles,S
                     (contact.native172.body==kcd2vr::npc_contact172::Body::Living||
                      contact.native172.body==kcd2vr::npc_contact172::Body::Articulated);
                 if(recoilDueH5||actorImpactH5){
-                    {auto& r=s.impactRecord178r30;r={};r.valid=true;r.tick=in.tick;r.speed=incoming;r.key=p.key;r.generation=p.generation;r.epoch=in.bodyEpoch;r.request=in.epoch;r.sample=in.sample;
+                    {auto& r=s.impactRecord178r30;r={};r.valid=true;r.tick=in.tick;r.speed=incoming;
+                     if(dt>0){r.handSpeedR178=m::length(point(desired,p.grip[side].p)-point(oldDesired,p.grip[side].p))/dt;r.pointSpeedR178=m::length(motion)/dt;} // R178 arm vs wrist flick (R179: on its own line - R178 had commented out the identity below)
+                     r.key=p.key;r.generation=p.generation;r.epoch=in.bodyEpoch;r.request=in.epoch;r.sample=in.sample;
                      // C54: remember the deliberate gesture at the actual impact,
                      // BEFORE this sample can end/cancel the recognizer. A later
                      // state reset cannot turn a real same-gesture contact into id0.
@@ -3063,8 +3082,8 @@ Output step(State& state,const Input& in,const std::array<Profile,2>& profiles,S
             // retain the value captured BEFORE contact changed recognizer state.
             // Unknown contacts remain id0; never borrow an arbitrary old release.
             if(!impact.gesture59c3&&(s.stroke118.active||
-               (normal_hybrid_intent_h31(in)?(s.committedGestureH26.gesture&&s.committedGestureH26.forwardTickH8==in.tick&&
-                    s.committedGestureH26.forwardSampleH8==in.sample):
+               (normal_hybrid_intent_h31(in)?(s.committedGestureH26.gesture&&kcd2vr::stab_contact_r189::recentForward( // R189
+                    s.committedGestureH26.forwardTickH8,s.committedGestureH26.forwardSampleH8,in.tick,in.sample)):
                  (s.released44c1&&s.lastAttack&&in.tick>=s.lastAttack&&in.tick-s.lastAttack<=160)))){impact.gesture59c3=s.gesture59c3;
                 impact.kind=s.stroke118.active?(s.stroke118.kind==melee118::Kind::Thrust?1:
                     (s.stroke118.kind==melee118::Kind::Cut||s.stroke118.kind==melee118::Kind::Pommel)?0:-1):

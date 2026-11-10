@@ -10,7 +10,7 @@ def patch_dialogue(data):
  sequence=ET.SubElement(behavior,'Sequence');sequence.append(old)
  # Retail ExecuteLua maps declared AI variables through data; stock so_door.xml uses the same CVar API/boolean assignment.
  ET.SubElement(sequence,'ExecuteLua',{'code':"data.kcd2vrNoCameras = (System.GetCVar('wh_dlg_NoCameras') == 1)"})
- gate=ET.SubElement(sequence,'IfCondition',{'failOnCondition':'false','condition':'$kcd2vrNoCameras and $preset==$enum:dialogPreset.fader'})
+ gate=ET.SubElement(sequence,'IfCondition',{'failOnCondition':'false','condition':'$kcd2vrNoCameras & $preset==$enum:dialogPreset.fader'})
  ET.SubElement(gate,'Expression',{'expressions':'$dialogParameters.useTwinsAsInitiator = false\n$dialogParameters.movePlayer = false\n$dialogParameters.rotatePlayer = false'})
  # Editor tree mirrors the native runtime node hierarchy; editor-only metadata does not execute.
  ed=bt.find('EditorData')

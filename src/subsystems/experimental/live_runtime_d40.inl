@@ -43,6 +43,7 @@
         d40.hideAtStationsR121=kcd2vr::stowed_hide_hw::hideAtStationsSetting.load(std::memory_order_acquire); // R121
         d40.eyeRayR121=kcd2vr::eye_ray_r121::enabled.load(std::memory_order_acquire); // R121
         d40.meleeGripR123=kcd2vr::melee_grip_r123::enabled.load(std::memory_order_acquire); // R123
+        d40.meleeGripDepthR168=kcd2vr::melee_grip_r123::depthCm.load(std::memory_order_acquire); // R168
         d40.propImpactSoundR124=kcd2vr::prop_impact_sound_r124::enabled.load(std::memory_order_acquire); // R124
         d40.sceneryBigPropsR158=kcd2vr::brush_swap_r100::bigPropsR158.load(std::memory_order_acquire); // R158
         d40.impaleFastDeathR106=kcd2vr::impale_death_speed_r106::enabled.load(std::memory_order_acquire); // R106
@@ -50,14 +51,27 @@
         d40.lockpickOpaqueR141=kcd2vr::hud_lock_alpha_r141::enabled.load(std::memory_order_acquire); // R141
         d40.eyeHoldR141=kcd2vr::xr_eye_hold_r141::enabled.load(std::memory_order_acquire); // R141
         d40.rideFollowXR147=kcd2vr::ride_follow_r147::enabled.load(std::memory_order_acquire); // R147
-        d40.tutorialNativeHitsR159=kcd2vr::tutorial_native_r159::mode.load(std::memory_order_acquire); // R159 / R161 mode 0..2 (every reader clamps)
-        d40.trainingVanillaNpcR163=kcd2vr::training_vanilla_r163::enabled.load(std::memory_order_acquire); // R163
+        d40.comboHoldR171=kcd2vr::combo_hold_r14::enabled.load(std::memory_order_acquire); // R171: COMBO HELP: HOLD (also COMBAT FLOW page)
+        d40.comboHoldSecR171=float(kcd2vr::combo_hold_r14::maxHoldMs.load(std::memory_order_acquire))*.001f; // R171
+        d40.comboWindowR171=combat_diag_probe::ComboWindowExtension(); // R171: COMBO HELP: EXTEND (also COMBAT FLOW page)
+        d40.comboWindowSecR171=float(g_exp59c10.comboWindowMs.load())*.001f; // R171: VrComboWindowSeconds
+        d40.comboZoneR171=kcd2vr::combo_zone_assist_cz::enabled.load(std::memory_order_acquire); // R171
+        d40.bodyFollowR173=kcd2vr::body_follow_r173::enabled.load(std::memory_order_acquire); // R173
+        d40.rangedRtFireR175=kcd2vr::ranged_rt_fire_r175::enabled.load(std::memory_order_acquire); // R175
+        d40.stoneThrowR176=kcd2vr::stone_throw_r176::enabled.load(std::memory_order_acquire); // R176
+        d40.weaponLeadR180=kcd2vr::weapon_lead_r180::cycles.load(std::memory_order_acquire); // R180
+        d40.chestBackCmR183=kcd2vr::chest_back_r183::cm.load(std::memory_order_acquire); // R183
+        d40.bodyLeadR191=kcd2vr::root_lead_r191::cycles.load(std::memory_order_acquire); // R191
+        d40.palmLookR192=kcd2vr::ui_palm_look_r192::enabled.load(std::memory_order_acquire); // R192
+        d40.enemyPresetR194=kcd2vr::enemy_preset_r194::stored.load(std::memory_order_acquire); // R194
+        d40.freePlusTurnLimitR186=kcd2vr::free_targeting_r133::turnLimitDeg.load(std::memory_order_acquire); // R186
+        d40.swingPowerArmR178=kcd2vr::weapon_feel_r178::armPower.load(std::memory_order_acquire); // R178
+        d40.bodyFollowDegR173=kcd2vr::body_follow_r173::freeLookDeg.load(std::memory_order_acquire); // R173
         d40.cinematicBarsR107=kcd2vr::cinematic_bars_r107::enabled.load(std::memory_order_acquire); // R107
         d40.dodgeWindowD70=dodge_window_d70::Factor();
         d40.hudWalkoffD70=claude_d70::HudWalkoff();
         d40.nativeRoomscaleD76=roomscale_d76::Enabled();
         d40.ridingVrikD76=riding_vrik_d76::Get();
-        d40.npcListeningD76=lively_npc_d73::ListeningGestures();
         d40.leanHeightD70=roomscale58::LeanHeightD70();
         d40.handLeadD69=claude_motion_d69::HandLead();
         d40.handLeadMsD69=claude_motion_d69::HandLeadMs();
@@ -100,10 +114,6 @@
         d40.fistStrokeD49=fist_stroke_d49::enabled.load(std::memory_order_acquire);
         d40.pickupCameraBridgeD55=camera_hold_e1::pickupBridgeD55.load(std::memory_order_acquire);
         d40.alchemyToolContactD55=alchemy_tool_contact_d55::enabled.load(std::memory_order_acquire);
-        d40.npcLifeD73=lively_npc_d73::Enabled();
-        d40.npcGazeHmdD52=npc_look_policy63::followHmd();
-        d40.npcGazeReadyD52=npc_look_policy63::hookReadyD52.load(std::memory_order_acquire);
-        d40.npcGazeSceneD52=npc_look_policy63::sceneAdmittedD52.load(std::memory_order_acquire)&&dialogue_state59c10r2::age(npc_look_policy63::sceneTickD52.load(std::memory_order_acquire),GetTickCount64(),80);
         d40.pickupNearOnlyD40=pickup_use19c3::nearOnlyD40.load(std::memory_order_acquire);
         d40.combatNoStepD40=frik_pose_probe::CombatNoStep55();
         d40.combatNoTurnD40=frik_pose_probe::CombatNoTurnD40();
@@ -168,6 +178,7 @@
         kcd2vr::stowed_hide_hw::hideAtStationsSetting.store(d40.hideAtStationsR121,std::memory_order_release); // R121: live, next stowed tick
         kcd2vr::eye_ray_r121::enabled.store(d40.eyeRayR121,std::memory_order_release); // R121: live, next look ray
         kcd2vr::melee_grip_r123::enabled.store(d40.meleeGripR123,std::memory_order_release); // R123: live, next grip sample
+        kcd2vr::melee_grip_r123::depthCm.store(d40.meleeGripDepthR168,std::memory_order_release); // R168: live, next grip sample (menu values are -2..4; depthScale clamps too)
         kcd2vr::prop_impact_sound_r124::enabled.store(d40.propImpactSoundR124,std::memory_order_release); // R124: live, next impact
         kcd2vr::brush_swap_r100::bigPropsR158.store(d40.sceneryBigPropsR158,std::memory_order_release); // R158: live, next Grip
         kcd2vr::impale_death_speed_r106::enabled.store(d40.impaleFastDeathR106,std::memory_order_release); // R106
@@ -175,14 +186,31 @@
         kcd2vr::hud_lock_alpha_r141::enabled.store(d40.lockpickOpaqueR141,std::memory_order_release); // R141: live, next XR frame
         kcd2vr::xr_eye_hold_r141::enabled.store(d40.eyeHoldR141,std::memory_order_release); // R141: live, next XR frame
         kcd2vr::ride_follow_r147::enabled.store(d40.rideFollowXR147,std::memory_order_release); // R147: live, next X press
-        kcd2vr::tutorial_native_r159::mode.store(d40.tutorialNativeHitsR159,std::memory_order_release); // R159 / R161: live, next swing (every reader clamps)
-        kcd2vr::training_vanilla_r163::enabled.store(d40.trainingVanillaNpcR163,std::memory_order_release); // R163: live, next control tick
+        // R171: the combo help rows share their owner with the COMBAT FLOW page. a row that differs from the live value is
+        // the change of this click; it goes into the same state fields the COMBAT FLOW apply below uses, so neither undoes it.
+        if(d40.comboHoldR171!=kcd2vr::combo_hold_r14::enabled.load(std::memory_order_acquire))state.exp_combo_recovery_hold=d40.comboHoldR171;
+        if(d40.comboWindowR171!=combat_diag_probe::ComboWindowExtension())state.exp_combo_window_extend=d40.comboWindowR171;
+        {const int cwR171=int(std::lround(std::clamp(d40.comboWindowSecR171,.5f,3.f)*1000.f));
+         if(std::fabs(d40.comboWindowSecR171-float(g_exp59c10.comboWindowMs.load())*.001f)>1e-3f)state.exp_combo_window_ms=cwR171;}
+        if(d40.comboZoneR171!=kcd2vr::combo_zone_assist_cz::enabled.load(std::memory_order_acquire))state.exp_combo_zone_assist=d40.comboZoneR171;
+        kcd2vr::body_follow_r173::enabled.store(d40.bodyFollowR173,std::memory_order_release); // R173: live, next camera apply (OFF clears its yaw)
+        kcd2vr::ranged_rt_fire_r175::enabled.store(d40.rangedRtFireR175,std::memory_order_release); // R175: live, next press
+        kcd2vr::stone_throw_r176::enabled.store(d40.stoneThrowR176,std::memory_order_release); // R176: live, next Grip press
+        kcd2vr::weapon_lead_r180::cycles.store(kcd2vr::weapon_lead_r180::clampCycles(d40.weaponLeadR180),std::memory_order_release); // R180: live, next placement
+        kcd2vr::chest_back_r183::cm.store(kcd2vr::chest_back_r183::clampCm(d40.chestBackCmR183),std::memory_order_release); // R183: live, next pose
+        kcd2vr::root_lead_r191::cycles.store(std::clamp(d40.bodyLeadR191,-1.f,2.f),std::memory_order_release); // R191: live, next camera frame / placement
+        kcd2vr::ui_palm_look_r192::enabled.store(d40.palmLookR192,std::memory_order_release); // R192: live, next XR frame
+        kcd2vr::enemy_preset_r194::stored.store(kcd2vr::enemy_preset_r194::clampStored(d40.enemyPresetR194),std::memory_order_release); // R194 (the values apply through their own keys)
+        kcd2vr::free_targeting_r133::turnLimitDeg.store(std::clamp(d40.freePlusTurnLimitR186,0.f,180.f),std::memory_order_release); // R186: live, next camera apply
+        kcd2vr::weapon_feel_r178::armPower.store(d40.swingPowerArmR178,std::memory_order_release); // R178: live, next hit
+        kcd2vr::body_follow_r173::freeLookDeg.store(d40.bodyFollowDegR173,std::memory_order_release); // R173: live (the camera hook clamps 10..90)
+        if(std::fabs(d40.comboHoldSecR171-float(kcd2vr::combo_hold_r14::maxHoldMs.load(std::memory_order_acquire))*.001f)>1e-3f) // only a click on this row
+            kcd2vr::combo_hold_r14::maxHoldMs.store(std::uint32_t(std::lround(std::clamp(d40.comboHoldSecR171,.25f,1.5f)*1000.f)),std::memory_order_release); // R171: live, next hold
         kcd2vr::cinematic_bars_r107::enabled.store(d40.cinematicBarsR107,std::memory_order_release); // R107
         dodge_window_d70::SetFactor(d40.dodgeWindowD70);
         claude_d70::SetHudWalkoff(d40.hudWalkoffD70);
         roomscale_d76::SetEnabled(d40.nativeRoomscaleD76);
         riding_vrik_d76::Set(d40.ridingVrikD76);
-        lively_npc_d73::SetListeningGestures(d40.npcListeningD76);
         roomscale58::SetLeanHeightD70(d40.leanHeightD70);
         claude_motion_d69::SetHandLeadMs(d40.handLeadMsD69);
         claude_motion_d69::SetHandLead(d40.handLeadD69);
@@ -225,9 +253,6 @@
         fist_stroke_d49::enabled.store(d40.fistStrokeD49,std::memory_order_release);
         camera_hold_e1::pickupBridgeD55.store(d40.pickupCameraBridgeD55,std::memory_order_release);
         alchemy_tool_contact_d55::enabled.store(d40.alchemyToolContactD55,std::memory_order_release);
-        if(d40.npcLifeD73!=lively_npc_d73::Enabled())
-            lively_npc_d73::SetEnabled(d40.npcLifeD73&&lively_npc_d73::Prepare());
-        npc_look_policy63::setFollowHmd(d40.npcGazeHmdD52);
         pickup_use19c3::setNearOnlyD40(d40.pickupNearOnlyD40);
         frik_pose_probe::SetCombatNoStep55(d40.combatNoStepD40);
         frik_pose_probe::SetCombatNoTurnD40(d40.combatNoTurnD40);
@@ -281,6 +306,7 @@
     ok=wb(kcd2vr::stowed_hide_hw::kHideAtStationsKey,kcd2vr::stowed_hide_hw::hideAtStationsSetting.load(std::memory_order_acquire))&&ok; // R121
     ok=wb("VrInteractionEyeRayR121",kcd2vr::eye_ray_r121::enabled.load(std::memory_order_acquire))&&ok; // R121
     ok=wb(kcd2vr::melee_grip_r123::kKey,kcd2vr::melee_grip_r123::enabled.load(std::memory_order_acquire))&&ok; // R123
+    ok=wf(kcd2vr::melee_grip_r123::kDepthKey,kcd2vr::melee_grip_r123::depthCm.load(std::memory_order_acquire))&&ok; // R168
     ok=wb(kcd2vr::prop_impact_sound_r124::kKey,kcd2vr::prop_impact_sound_r124::enabled.load(std::memory_order_acquire))&&ok; // R124
     ok=wb("VrSceneryBigPropsR158",kcd2vr::brush_swap_r100::bigPropsR158.load(std::memory_order_acquire))&&ok; // R158
     ok=wb("VrImpaleFastDeathR106",kcd2vr::impale_death_speed_r106::enabled.load(std::memory_order_acquire))&&ok; // R106
@@ -288,13 +314,21 @@
     ok=wb("VrLockpickOpaqueR141",kcd2vr::hud_lock_alpha_r141::enabled.load(std::memory_order_acquire))&&ok; // R141
     ok=wb("VrEyeHoldR141",kcd2vr::xr_eye_hold_r141::enabled.load(std::memory_order_acquire))&&ok; // R141
     ok=wb(kcd2vr::ride_follow_r147::kKey,kcd2vr::ride_follow_r147::enabled.load(std::memory_order_acquire))&&ok; // R147
-    ok=wb(kcd2vr::training_vanilla_r163::kKey,kcd2vr::training_vanilla_r163::enabled.load(std::memory_order_acquire))&&ok; // R163
-    ok=wi("VrTutorialNativeHitsR159",kcd2vr::tutorial_native_r159::clampMode(kcd2vr::tutorial_native_r159::mode.load(std::memory_order_acquire)))&&ok; // R159 / R161: 0 OFF, 1 NATIVE HITS, 2 GAME TIMING
+    ok=wb(kcd2vr::stone_throw_r176::kKey,kcd2vr::stone_throw_r176::enabled.load(std::memory_order_acquire))&&ok; // R176
+    ok=wf(kcd2vr::weapon_lead_r180::kKey,kcd2vr::weapon_lead_r180::cycles.load(std::memory_order_acquire))&&ok; // R180
+    ok=wf(kcd2vr::chest_back_r183::kKey,kcd2vr::chest_back_r183::cm.load(std::memory_order_acquire))&&ok; // R183
+    ok=wf(kcd2vr::root_lead_r191::kKey,kcd2vr::root_lead_r191::cycles.load(std::memory_order_acquire))&&ok; // R191
+    ok=wb(kcd2vr::ui_palm_look_r192::kKey,kcd2vr::ui_palm_look_r192::enabled.load(std::memory_order_acquire))&&ok; // R192
+    if(kcd2vr::enemy_preset_r194::stored.load(std::memory_order_acquire)>=0)ok=wi(kcd2vr::enemy_preset_r194::kKey,kcd2vr::enemy_preset_r194::stored.load(std::memory_order_acquire))&&ok; // R194: not written until chosen
+    ok=wf(kcd2vr::free_targeting_r133::kTurnLimitKey,kcd2vr::free_targeting_r133::turnLimitDeg.load(std::memory_order_acquire))&&ok; // R186
+    ok=wb(kcd2vr::weapon_feel_r178::kPowerKey,kcd2vr::weapon_feel_r178::armPower.load(std::memory_order_acquire))&&ok; // R178
+    ok=wb(kcd2vr::ranged_rt_fire_r175::kKey,kcd2vr::ranged_rt_fire_r175::enabled.load(std::memory_order_acquire))&&ok; // R175
+    ok=wb(kcd2vr::body_follow_r173::kKey,kcd2vr::body_follow_r173::enabled.load(std::memory_order_acquire))&&ok; // R173
+    ok=wf(kcd2vr::body_follow_r173::kDegKey,kcd2vr::body_follow_r173::freeLookDeg.load(std::memory_order_acquire))&&ok; // R173
     ok=wb("VrCinematicBarsR107",kcd2vr::cinematic_bars_r107::enabled.load(std::memory_order_acquire))&&ok; // R107
     ok=wb("VrHudWalkoffD70",claude_d70::HudWalkoff())&&ok;
     ok=wb("VrNativeRoomscale1to1D76",roomscale_d76::Enabled())&&ok;
     ok=wb("VrRidingVrikD76",riding_vrik_d76::Get())&&ok;
-    ok=wb("VrNpcListeningGesturesD76",lively_npc_d73::ListeningGestures())&&ok;
     ok=wf("VrRoomscaleLeanHeightD70",roomscale58::LeanHeightD70())&&ok;
     ok=wb("VrHandLeadD67C",claude_motion_d69::HandLead())&&ok;
     ok=wf("VrHandLeadMsD69",claude_motion_d69::HandLeadMs())&&ok;
@@ -335,8 +369,6 @@
     ok=wb("VrFistStrokeTrialD49",fist_stroke_d49::enabled.load(std::memory_order_acquire))&&ok;
     ok=wb("VrPickupCameraBridgeD55",camera_hold_e1::pickupBridgeD55.load(std::memory_order_acquire))&&ok;
     ok=wb("VrAlchemyToolContactD55",alchemy_tool_contact_d55::enabled.load(std::memory_order_acquire))&&ok;
-    ok=wb("VrLivelyNpcD73",lively_npc_d73::Enabled())&&ok;
-    ok=wb("VrDialogueNpcLookHmd",npc_look_policy63::followHmd())&&ok;
     ok=wb("VrPickupNearOnlyD40",pickup_use19c3::nearOnlyD40.load(std::memory_order_acquire))&&ok;
     ok=wb("VrCombatNoStep",frik_pose_probe::CombatNoStep55())&&ok;
     ok=wb("VrCombatNoTurnD40",frik_pose_probe::CombatNoTurnD40())&&ok;
@@ -423,6 +455,7 @@
     kcd2vr::eye_ray_r121::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings","VrInteractionEyeRayR121",true),std::memory_order_release);
     // R123: true (default) = a melee weapon sits at its own hand socket (authored wrist relation); false = learned from the animated hand.
     kcd2vr::melee_grip_r123::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings",kcd2vr::melee_grip_r123::kKey,true),std::memory_order_release);
+    kcd2vr::melee_grip_r123::depthCm.store(kcd2vr::melee_grip_r123::clampDepth(ReadIniFloatExplicit(explicit_ini,"Settings",kcd2vr::melee_grip_r123::kDepthKey,0.f)),std::memory_order_release); // R168
     // R124: ON (default) = a released/knocked loose prop of ours plays the game's authored put-down sound (clay, wood,
     // metal, glass ...) when its velocity changes >= 1.2 m/s in one frame; OFF = silent props (R123). GEAR page 2.
     kcd2vr::prop_impact_sound_r124::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings",kcd2vr::prop_impact_sound_r124::kKey,true),std::memory_order_release);
@@ -439,22 +472,33 @@
     // R147: ON (default) = a short left X tap (PS VR2 Square) sends LB when the game lists the follow
     // prompt (ride_follow_r147.h), on the horse and (R155) on foot. no prompt = Quick Speak as before. GEAR page 3 row 8.
     kcd2vr::ride_follow_r147::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings",kcd2vr::ride_follow_r147::kKey,true),std::memory_order_release); // R147
-    // R159 / R161 (tutorial_native_r159.h), only while Henry holds a practice / quest weapon: 0 OFF, 1 NATIVE HITS (old R159 ON:
-    // no mod direct hit), 2 GAME TIMING (the game's own attack speed, no VrNativeHitTime / clock catch-up, direct route as OFF).
-    // R162: default 0 OFF (REVIEW162_tut). old INIs: true = 1, false = 0, missing = 0. VRIK page 2 row 5.
-    kcd2vr::tutorial_native_r159::mode.store(ReadIniIntExplicit(explicit_ini,"Settings","VrTutorialNativeHitsR159",0),std::memory_order_release); // R161 number 0..2 (R162: missing = 0)
-    {char rawR161[32]{};GetPrivateProfileStringA("Settings","VrTutorialNativeHitsR159","",rawR161,DWORD(sizeof(rawR161)),explicit_ini); // the old bool spelling
-     kcd2vr::tutorial_native_r159::mode.store(kcd2vr::tutorial_native_r159::modeFromIniText(rawR161,
-         kcd2vr::tutorial_native_r159::mode.load(std::memory_order_acquire)),std::memory_order_release);} // R161: true = 1, false = 0
-    // R163: ON (default) = while Henry holds a practice / quest weapon (training fight) no mod feature writes to any NPC (AI,
-    // animation, action timing, look, global NPC cvars), what one still holds is given back (training_vanilla_r163.h).
-    // OFF = every NPC feature runs as before. VRIK page 2 row 4.
-    kcd2vr::training_vanilla_r163::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings",kcd2vr::training_vanilla_r163::kKey,true),std::memory_order_release); // R163
+    // R171: the tutorial modes (R159 NATIVE HITS / GAME TIMING, R163 training fights: vanilla NPCs) are removed. the Capon
+    // sparring stall was the companion lively NPC tree (R170), not the combat. both stay OFF; their INI keys are not read.
+    kcd2vr::tutorial_native_r159::mode.store(0,std::memory_order_release);
+    kcd2vr::training_vanilla_r163::enabled.store(false,std::memory_order_release);
+    // R173 body follows the headset (vrik/body_follow_r173.h): OFF until headset proven; free look 15..60 deg, default 45 (R177).
+    // VRIK+ page 2 rows 2 and 7.
+    // R175 crossbow / gun: the right trigger alone aims and shoots (ranged_rt_fire_r175.h). NPCS page row 5.
+    // R176 stone throw: crouched + raised empty left hand + Grip = RB (the game's distract_init / decoy_throw). GEAR page row 2.
+    kcd2vr::stone_throw_r176::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings",kcd2vr::stone_throw_r176::kKey,true),std::memory_order_release);
+    kcd2vr::weapon_feel_r178::handlePivot.store(false,std::memory_order_release); // R180: R178 handle pivot retired (did not help), VrWeaponHandlePivotR178 ignored
+    kcd2vr::weapon_lead_r180::cycles.store(kcd2vr::weapon_lead_r180::clampCycles(ReadIniFloatExplicit(explicit_ini,"Settings",kcd2vr::weapon_lead_r180::kKey,1.f)),std::memory_order_release); // R180
+    kcd2vr::chest_back_r183::cm.store(kcd2vr::chest_back_r183::clampCm(ReadIniFloatExplicit(explicit_ini,"Settings",kcd2vr::chest_back_r183::kKey,4.f)),std::memory_order_release); // R183
+    kcd2vr::root_lead_r191::cycles.store(kcd2vr::root_lead_r191::clampCycles(ReadIniFloatExplicit(explicit_ini,"Settings",kcd2vr::root_lead_r191::kKey,1.f)),std::memory_order_release); // R191
+    kcd2vr::ui_palm_look_r192::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings",kcd2vr::ui_palm_look_r192::kKey,true),std::memory_order_release); // R192
+    kcd2vr::enemy_preset_r194::stored.store(kcd2vr::enemy_preset_r194::clampStored(ReadIniIntExplicit(explicit_ini,"Settings",kcd2vr::enemy_preset_r194::kKey,-1)),std::memory_order_release); // R194
+    kcd2vr::free_targeting_r133::turnLimitDeg.store(kcd2vr::free_targeting_r133::clampLimit(ReadIniFloatExplicit(explicit_ini,"Settings",kcd2vr::free_targeting_r133::kTurnLimitKey,90.f)),std::memory_order_release); // R186
+    kcd2vr::weapon_feel_r178::armPower.store(ReadIniBoolExplicit(explicit_ini,"Settings",kcd2vr::weapon_feel_r178::kPowerKey,true),std::memory_order_release); // R178
+    kcd2vr::ranged_rt_fire_r175::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings",kcd2vr::ranged_rt_fire_r175::kKey,true),std::memory_order_release);
+    kcd2vr::body_follow_r173::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings",kcd2vr::body_follow_r173::kKey,false),std::memory_order_release);
+    kcd2vr::body_follow_r173::freeLookDeg.store(kcd2vr::body_follow_r173::clampDeg(ReadIniFloatExplicit(explicit_ini,"Settings",kcd2vr::body_follow_r173::kDegKey,45.f)),std::memory_order_release);
     kcd2vr::cinematic_bars_r107::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings","VrCinematicBarsR107",true),std::memory_order_release); // R107
     claude_d70::SetHudWalkoff(ReadIniBoolExplicit(explicit_ini,"Settings","VrHudWalkoffD70",false));
     roomscale_d76::SetEnabled(ReadIniBoolExplicit(explicit_ini,"Settings","VrNativeRoomscale1to1D76",false));
     riding_vrik_d76::Set(ReadIniBoolExplicit(explicit_ini,"Settings","VrRidingVrikD76",true));
-    lively_npc_d73::SetListeningGestures(ReadIniBoolExplicit(explicit_ini,"Settings","VrNpcListeningGesturesD76",true));
+    // R171: lively NPC (D73 gaze/face idles, D76 listening gestures) and the dialogue NPC look at the HMD (D52) are removed:
+    // the look hook is not installed any more (mod.cpp), these stay OFF, their INI keys are not read.
+    lively_npc_d73::SetListeningGestures(false);
     roomscale58::SetLeanHeightD70(ReadIniFloatExplicit(explicit_ini,"Settings","VrRoomscaleLeanHeightD70",.12f));
     claude_motion_d69::SetHandLeadMs(ReadIniFloatExplicit(explicit_ini,"Settings","VrHandLeadMsD69",11.f));
     claude_motion_d69::SetHandLead(ReadIniBoolExplicit(explicit_ini,"Settings","VrHandLeadD67C",false));
@@ -498,8 +542,8 @@
     two_hand_d65::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings","VrTwoHandPrimaryBiasExperimentD65",true));
     camera_hold_e1::pickupBridgeD55.store(ReadIniBoolExplicit(explicit_ini,"Settings","VrPickupCameraBridgeD55",true),std::memory_order_release);
     alchemy_tool_contact_d55::enabled.store(ReadIniBoolExplicit(explicit_ini,"Settings","VrAlchemyToolContactD55",true),std::memory_order_release);
-    lively_npc_d73::SetEnabled(ReadIniBoolExplicit(explicit_ini,"Settings","VrLivelyNpcD73",true));
-    npc_look_policy63::setFollowHmd(ReadIniBoolExplicit(explicit_ini,"Settings","VrDialogueNpcLookHmd",true));
+    lively_npc_d73::SetEnabled(false);
+    npc_look_policy63::setFollowHmd(false);
     pickup_use19c3::setNearOnlyD40(ReadIniBoolExplicit(explicit_ini,"Settings","VrPickupNearOnlyD40",false));
     frik_pose_probe::SetCombatNoTurnD40(ReadIniBoolExplicit(explicit_ini,"Settings","VrCombatNoTurnD40",true));
     {   // R133: VrFreeTargetingModeR133 0/1/2 wins; an old INI keeps working: VrFreeTargeting true -> 1, false -> 0.

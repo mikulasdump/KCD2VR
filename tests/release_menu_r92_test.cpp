@@ -27,12 +27,12 @@ int main(){
  check(r::advance(s,r::Row::FastBlock)&&s.fast_block_r92);check(r::advance(s,r::Row::FastBlock)&&!s.fast_block_r92);
  s.roomscale_mode=0;for(int expected=1;expected<=4;++expected){check(r::advance(s,r::Row::Roomscale)&&s.roomscale_mode==expected%4);check(s.live_d39.nativeRoomscaleD76==(expected==1||expected==2));}
  for(int expected=1;expected<=4;++expected){check(r::advance(s,r::Row::Vignette)&&s.comfort_vignette51==expected%4);}
- check(!s.gesture_talk&&r::rows(1)[4].id==r::Row::PointingTalk);
+ check(!s.gesture_talk&&r::rows(1)[2].id==r::Row::PointingTalk); // R192 page 2 row 3
  check(r::advance(s,r::Row::PointingTalk)&&s.gesture_talk&&std::wcscmp(r::value(s,r::Row::PointingTalk),L"ON")==0);
  check(l::advance(s,l::Id::QuickTalk)&&!s.gesture_talk&&std::wcscmp(r::value(s,r::Row::PointingTalk),L"OFF")==0);
  check(l::advance(s,l::Id::QuickTalk)&&s.gesture_talk);
  check(r::advance(s,r::Row::PointingTalk)&&!s.gesture_talk);
- check(r::rows(1)[5].id==r::Row::Impale);
+ check(r::rows(1)[6].id==r::Row::Impale); // R192 page 2 row 7
  s.impale_hang=3;s.impale_hang_on45=3;
  check(r::advance(s,r::Row::Impale)&&s.impale_hang==0&&std::wcscmp(r::value(s,r::Row::Impale),L"OFF")==0);
  check(r::advance(s,r::Row::Impale)&&s.impale_hang==3&&std::wcscmp(r::value(s,r::Row::Impale),L"ON")==0);

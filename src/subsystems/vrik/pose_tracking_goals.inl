@@ -107,3 +107,11 @@
     V3 goals[2]{requestedGoals[0],requestedGoals[1]};
     const bool valid[2]{ts.right_valid&&(!tx.reloadWorkingHandXR34||reloadHandPolicyR95.tracked[0]),
         ts.left_valid&&(!tx.reloadWorkingHandXR34||reloadHandPolicyR95.tracked[1])};
+    if(!tx.diceBodyD81){ // R183/R185 (chest_back_r183.h): the trunk hangs a few cm behind the view when the hands are near the body,
+        // reaching brings it up to 5 cm FORWARD, so the shoulders lead the arms (camera + hands unchanged)
+        const V3 fwdR183=QRotateV(frame,XrToCryV(V3{0.f,0.f,-1.f}));
+        float reachR185=-1.f;for(int side=0;side<2;++side)if(valid[side]){const V3 d=Sub(requestedGoals[side],headTarget);
+            const float n=std::sqrt(fwdR183.x*fwdR183.x+fwdR183.y*fwdR183.y);if(n>1e-4f)reachR185=std::max(reachR185,(d.x*fwdR183.x+d.y*fwdR183.y)/n);}
+        const auto shR183=kcd2vr::chest_back_r183::shift(fwdR183.x,fwdR183.y,kcd2vr::chest_back_r183::trunkCm(kcd2vr::chest_back_r183::cm.load(std::memory_order_relaxed),reachR185));
+        headTarget=Add(headTarget,V3{shR183.x,shR183.y,shR183.z});
+    }

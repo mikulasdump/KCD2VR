@@ -60,6 +60,7 @@ inline void AdvanceCommittedGestureH8(const Input& in,const Profile& p,WeaponSta
         // backward frame for contact. Existing recovery/quiet/new-candidate
         // handling above and in normal_intent_phase_h30 ends the original cut.
         // STAB and POMMEL keep immediate retreat retirement. No clock is renewed.
+        if(kcd2vr::stab_contact_r189::keepThrust(c.kind,c.tick,in.tick))return; // R189: a stab meeting the body is still that stab
         if(c.kind!=0||s.stroke117!=CommandKind::Slash)c={};
         return;
     }

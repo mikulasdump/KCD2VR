@@ -38,9 +38,25 @@ ALLOW = {
     'EnableVrikSemanticOwnershipTest': '[Experimental] switch kept ON in the shipped INI, code fallback false',
 }
 # Ids that have no row on purpose (retired or status-only), see the comments in live_settings_d39.h
-IDS_WITHOUT_ROW = {'None', 'MapRegion', 'NpcTouchD40', 'LivingTouchD40', 'CombatTurnStatusD40', 'KnifeRightHipD66'}
+IDS_WITHOUT_ROW = {'None', 'MapRegion', 'NpcTouchD40', 'LivingTouchD40', 'CombatTurnStatusD40', 'KnifeRightHipD66',
+                   # R171 removed: lively NPC, listening gestures, dialogue NPC look at the HMD, the two tutorial modes
+                   'NpcGazeD52', 'NpcLifeD73', 'NpcListeningD76', 'TutorialNativeHitsR159', 'TrainingVanillaNpcR163',
+                   # R173: Extra prediction time is in the Extra hand prediction row now; F2 comparison boundary is INI only
+                   'HandLeadMsD69', 'TimingLocationD64',
+                   # R175: the paused Accepted-hit reaction lab row (status only) made room for Crossbow / gun: RT alone shoots
+                   'LivingImpactD40',
+                   # R183: HUD event-only updates (perf trial) is INI only; its row holds Chest under the view: back
+                   'HudWalkoffD70',
+                   # R176: the chest dagger display is removed (Stone throw took its row)
+                   'ChestDagger',
+                   # R177: the Clinch control status row made room for Enemies block your swing (VrDirectNpcBlock)
+                   'ClinchStatusD40'}
+# R171: these rows share their owner with the COMBAT FLOW page; APPLY writes the click into the same menu state field
+# (state.exp_combo_*), the COMBAT FLOW apply stores it to the owner READ takes it from
+VIA_MENU_STATE = {'comboHoldR171', 'comboHoldSecR171', 'comboWindowR171', 'comboWindowSecR171', 'comboZoneR171'}
 # INI keys mentioned in docs that the code no longer reads (the docs say so)
-DOC_KEYS_RETIRED = {'VrCrossbowHandOnlyR89'}
+DOC_KEYS_RETIRED = {'VrWeaponHandlePivotR178', 'VrCrossbowHandOnlyR89', 'VrTutorialNativeHitsR159', 'VrTrainingVanillaNpcR163', 'VrLivelyNpcD73',
+                    'VrNpcListeningGesturesD76', 'VrDialogueNpcLookHmd', 'VrChestDagger'}  # R171 removed, SETTINGS.md says so
 
 errors = []
 notes = []
@@ -290,6 +306,8 @@ def parse_rows(text):
     rows = []
     for m in re.finditer(r'\{Id::(\w+),L"((?:[^"\\]|\\.)*)",L"((?:[^"\\]|\\.)*)"(?:,(true|false))?(?:,(true|false))?\}', text):
         line = text.count('\n', 0, m.start()) + 1
+        if m.group(1) == 'None':
+            continue  # R184: empty filler slot on a page
         rows.append((m.group(1), m.group(2), line, m.group(5) == 'true'))
     return rows
 
@@ -359,7 +377,7 @@ def parse_d40(text, consts):
     def stem(name):
         return re.sub(r'setting|selected|enabled|\(.*', '', name.split('::')[-1].lower())
     for field, getter in field_getter.items():
-        if field not in apply_owner or getter in apply_owner[field]:
+        if field not in apply_owner or getter in apply_owner[field] or field in VIA_MENU_STATE:
             continue
         g = stem(getter)
         # same owner namespace and the same name stem (rightHipSetting <-> setRightHip, crankTravelSetting(crankTravel) <-> crankTravelSetting)
@@ -517,11 +535,17 @@ def main():
                 err('page %s lists Id::%s twice' % (m.group(1), rid))
         if len(page_ids) != 8:
             err('page %s has %d rows (8 expected)' % (m.group(1), len(page_ids)))
-    krows = re.search(r'kRows\{\{(.*?)\n\}\};', d39, re.S).group(1)
-    for n, page in enumerate(re.findall(r'\{\{(.*?)\}\}\}', krows, re.S)):
+    # R184: one page table kPageRows (every page 8 rows incl. Id::None fillers, every setting once)
+    kpr = re.search(r'kPageRows\{\{(.*?)\n\}\};', d39, re.S).group(1)
+    allids = []
+    for n, page in enumerate(re.findall(r'\{\{ //[^\n]*\n(.*?)\n\s*\}\}', kpr, re.S)):
         page_ids = re.findall(r'\{Id::(\w+),', page)
         if len(page_ids) != 8:
-            err('kRows page %d has %d rows (8 expected)' % (n, len(page_ids)))
+            err('kPageRows page %d has %d rows (8 expected)' % (n, len(page_ids)))
+        allids += [i for i in page_ids if i != 'None']
+    for rid in set(allids):
+        if allids.count(rid) > 1:
+            err('kPageRows lists Id::%s twice' % rid)
 
     # --- live_runtime_d40.inl: field <- owner <- INI key: struct default must equal the loader default
     field_getter, setter_key, load_keys, save_keys = parse_d40(d40, consts)

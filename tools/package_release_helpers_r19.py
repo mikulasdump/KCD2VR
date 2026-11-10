@@ -26,8 +26,9 @@ def prepare_companion(source,out,optional_gore_source=None):
     replacements={member:source/path for path,member in SOURCE_PAIRS.items() if member not in ALLOWED_ADDITIONS}
     additions={member:source/path for path,member in SOURCE_PAIRS.items() if member in ALLOWED_ADDITIONS}
     # D33: the baked chest sheath model joins the pak only once it exists (tools/cgf_scale_d33.py output); no model = Lua says so
+    # R176: the chest dagger (no texture, never worked) is removed: the model and its Lua no longer join the pak
     sheath=source/'companion/source/Objects/kcd2vr/chest_sheath_d33'
-    if sheath.is_dir():
+    if False and sheath.is_dir():
         for f in sorted(sheath.iterdir()):
             if f.suffix.lower() in ('.cgf','.cgfm','.mtl'):additions['Objects/kcd2vr/chest_sheath_d33/'+f.name]=f
     # M41: native static paper + baked first-UV artwork, current source assets.

@@ -37,7 +37,13 @@ static void __fastcall BowShootDetourD65C(void* manager,void* actor,unsigned fla
     namespace aim=kcd2vr::bow_physical_aim_d65c;
     const auto original=g_bow_shoot_original_d65c;if(!original)return;
     if(KCD2VR_GRASP_CALLER()==WhBase()+0x289A107&&dir&&up&&pos&&BowHooksCurrentD65C()){
-        aim::Snapshot s{};const auto why=aim::take(actor,launcher,s);
+        aim::Snapshot s{};auto why=aim::take(actor,launcher,s);bool lateR171=false;
+        if(why!=aim::Refusal::None&&!aim::shotScope){ // R172: the release had no firing action on its stack
+            const auto pending=aim::takePending(actor,launcher,GetTickCount64(),s);
+            if(pending==aim::Refusal::None){why=pending;lateR171=true;}
+            else if(pending!=aim::Refusal::NoRelease&&pending!=aim::Refusal::ActorMismatch&&pending!=aim::Refusal::Disabled){
+                char b[160]{};std::snprintf(b,sizeof(b),"R172 BOW_AIM arrow used the game's aim, reason=%s",aim::name(pending));diagnostic_trace::Write(b);}
+        }
         if(why==aim::Refusal::None){
             float localDir[3],localPos[3];BowShootUpD65C localUp{};
             if(SehCopy(up,&localUp,sizeof(localUp))){
@@ -48,8 +54,8 @@ static void __fastcall BowShootDetourD65C(void* manager,void* actor,unsigned fla
                 if(n>1e-3){for(int i=0;i<3;++i)localUp.v[i]=float(u[i]/n);localUp.valid=1;
                     original(manager,actor,flags,localDir,&localUp,localPos,launcher,payload,speed,flag);
                     if(BowCaptureD65C()){char row[384]{};std::snprintf(row,sizeof(row),
-                        "D65 BOW_SHOOT aim=VR release=%llu action=%p key=%llX ageMs=%llu dir=(%.4f,%.4f,%.4f) nock=(%.3f,%.3f,%.3f) nativeSpeed=%.3f",
-                        (unsigned long long)s.serial,s.action,(unsigned long long)s.key,(unsigned long long)(GetTickCount64()-s.tick),
+                        "D65 BOW_SHOOT aim=VR%s release=%llu action=%p key=%llX ageMs=%llu dir=(%.4f,%.4f,%.4f) nock=(%.3f,%.3f,%.3f) nativeSpeed=%.3f",
+                        lateR171?"_LATE_ACTION":"",(unsigned long long)s.serial,s.action,(unsigned long long)s.key,(unsigned long long)(GetTickCount64()-s.tick),
                         s.dir[0],s.dir[1],s.dir[2],s.nock[0],s.nock[1],s.nock[2],double(speed));diagnostic_trace::Write(row);}
                     return;
                 }

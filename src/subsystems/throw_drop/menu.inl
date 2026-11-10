@@ -24,7 +24,7 @@ if(PtIn(kWeaponReleaseT1,x,y)){s.weapon_release_mode_t1=s.weapon_release_mode_t1
 #elif defined(KCD2VR_MENU_DRAW_KWEAPONRELEASET1)
         DrawButton(dc,font_small_,kWeaponReleaseT1,s.weapon_release_mode_t1==1?L"RELEASE: DROP / THROW (NATIVE RULES)":L"RELEASE: AUTO HOLSTER",s.weapon_release_mode_t1==1?kAccent:kPanel2);
 #elif defined(KCD2VR_MENU_CLICK_KIXCHESTDAGGERT3)
-if(PtIn(kIxChestDaggerT3,x,y)){s.chest_dagger54=!s.chest_dagger54;done(s.chest_dagger54?"T3 CHEST_DAGGER visual=ON":"T3 CHEST_DAGGER visual=OFF");return;}
+// R176: the chest dagger button is removed
 #elif defined(KCD2VR_MENU_DRAW_KIXCHESTDAGGERT3)
-        DrawButton(dc,font_small_,kIxChestDaggerT3,s.chest_dagger54?L"CHEST DAGGER: ON (VISUAL)":L"CHEST DAGGER: OFF",s.chest_dagger54?kAccent:kPanel2);
+        // R176: the chest dagger button is removed
 #endif

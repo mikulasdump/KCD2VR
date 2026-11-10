@@ -181,12 +181,13 @@ constexpr UiRect kPickupCameraD65{620,490,1038,526},kRepairTrialsD65{620,578,103
 constexpr UiRect kNativeFinisherD61{620,356,1038,388};
 constexpr UiRect kHomeHeadSync{130,610,310,638};
 constexpr UiRect kH29TuneNav{130,495,500,533},kH29Type{620,165,1038,195},kH29Cut{620,225,1038,247},kH29Stab{620,305,1038,327},kH29Punch{620,385,1038,407},kH29Block{620,465,1038,487},kH29TravelR8{620,545,1038,567},kFingerMiddleC54{620,495,1038,517},kFingerMiddleMedialH31{620,555,1038,577};
-constexpr UiRect kGuardWidthD56{620,190,1038,212},kGuardHeightD56{620,250,1038,272},
-    kGuardDepthD61{620,310,1038,332},kGuardEntryD56{620,370,1038,392},
-    kGuardReleaseD56{620,430,1038,452},kGuardSettleD56{620,490,1038,512},
+// R177: 8 rows (52 px apart) - the Block ON hold time slider joined the BLOCK page next to the speed (Miki: "add my block sliders to the block")
+constexpr UiRect kGuardWidthD56{620,186,1038,208},kGuardHeightD56{620,238,1038,260},
+    kGuardDepthD61{620,290,1038,312},kGuardEntryD56{620,342,1038,364},kGuardDwellR177{620,394,1038,416},
+    kGuardReleaseD56{620,446,1038,468},kGuardSettleD56{620,498,1038,520},
     kGuardDistanceD56{620,550,1038,572};
 constexpr bool GuardSliderLayoutD61(){
-    const UiRect rows[]{kGuardWidthD56,kGuardHeightD56,kGuardDepthD61,kGuardEntryD56,kGuardReleaseD56,kGuardSettleD56,kGuardDistanceD56};
+    const UiRect rows[]{kGuardWidthD56,kGuardHeightD56,kGuardDepthD61,kGuardEntryD56,kGuardDwellR177,kGuardReleaseD56,kGuardSettleD56,kGuardDistanceD56};
     for(unsigned i=0;i<std::size(rows);++i)if(rows[i].l<620||rows[i].r>1038||rows[i].t<180||rows[i].b>580||(i&&rows[i-1].b+30>rows[i].t))return false;
     return true;
 }
@@ -208,24 +209,45 @@ static_assert(H29SliderLayout(),"H29 sensitivity and finger sliders must fit wit
 inline UiRect FingerButton40(int i){return {620+i*84,190,698+i*84,222};}
 constexpr UiRect kHomeF2Fix{320,610,500,638};
 
-constexpr UiRect kHomeVrConfig{620,132,1028,182};
-constexpr UiRect kHomeGraphics{620,197,1028,247};
-constexpr UiRect kHomeUi{620,262,1028,312};
-constexpr UiRect kHomeActions{620,392,1028,442};
-constexpr UiRect kHomeDialogue{620,327,1028,377};
-constexpr UiRect kHomeVrikNative{620,452,820,488};
-constexpr UiRect kHomeVrikTracked{838,452,1038,488};
-constexpr UiRect kHomeVrikRecalibrate{620,494,826,520};
-constexpr UiRect kHomeVrikRestore43{832,494,1038,520};  // C43: apply the stored calibration again (no T-pose)
-constexpr UiRect kHomeBest{620,526,820,550};
-constexpr UiRect kHomeAutoRestore43{832,526,1038,550};  // C43: VrCalibrationAutoRestore checkbox
+// R193 (Miki 10 Nov: "only 5 items on the right page - HUD, VR config, Graphics, Immersion and controls and combat ...
+// and VRIK, native controls, recalibrate VRIK"; left page = mono / stereo only). FPS limit is on GRAPHICS, the
+// controller page on VR CONFIG > CONTROLS. restore calibration, auto restore, best VR settings and SAVE: developer mode.
+constexpr UiRect kHomeUi{620,112,1028,158};        // HUD
+constexpr UiRect kHomeVrConfig{620,166,1028,212};
+constexpr UiRect kHomeGraphics{620,220,1028,266};
+constexpr UiRect kHomeDialogue{620,274,1028,320};  // IMMERSION AND CONTROLS
+constexpr UiRect kHomeCombatR193{620,328,1028,374}; // COMBAT
+constexpr UiRect kHomeVrikTracked{620,392,824,428};
+constexpr UiRect kHomeVrikNative{834,392,1038,428};
+constexpr UiRect kHomeVrikRecalibrate{620,436,1038,466};
+constexpr UiRect kHomeVrikRestore43{620,474,826,498};  // C43: apply the stored calibration again (no T-pose), developer
+constexpr UiRect kHomeAutoRestore43{832,474,1038,498};  // C43: VrCalibrationAutoRestore checkbox, developer
+constexpr UiRect kHomeBest{620,504,826,528};             // developer
+// R194 COMBAT tabs (ENEMIES / CUSTOM / SENSITIVITY) and the CUSTOM enemies controls (Miki 10 Nov: "custom NPC difficulty
+// should have a tab where you can choose the block rate and difficulty slider and block change from low skill to high
+// skill (1.0-3.0 slider)", "weapon sensitivity in there as separate tab (the same from the left side menu)")
+constexpr UiRect kCombatTabEnemiesR194{620,120,754,150},kCombatTabCustomR194{762,120,896,150},kCombatTabSensR194{904,120,1038,150};
+constexpr UiRect kCustomRateR194{620,182,1038,208};       // detail text 209..229
+constexpr UiRect kCustomDifficultyR194{620,270,1038,292};
+constexpr UiRect kCustomBySkillR194{620,312,1038,338};
+constexpr UiRect kCustomLoR194{620,384,1038,406},kCustomHiR194{620,446,1038,468},kCustomAllR194{620,508,1038,530};
+constexpr bool CombatCustomLayoutR194(){
+    const UiRect r[]{kCombatTabEnemiesR194,kCombatTabCustomR194,kCombatTabSensR194,kCustomRateR194,kCustomDifficultyR194,kCustomBySkillR194,kCustomLoR194,kCustomHiR194,kCustomAllR194};
+    for(unsigned i=0;i<std::size(r);++i){if(r[i].l<620||r[i].r>1038||r[i].t<112||r[i].b>560)return false;
+        for(unsigned j=i+1;j<std::size(r);++j)if(r[i].l<r[j].r&&r[j].l<r[i].r&&r[i].t<r[j].b&&r[j].t<r[i].b)return false;}
+    const UiRect sliders[]{kCustomDifficultyR194,kCustomLoR194,kCustomHiR194,kCustomAllR194};const UiRect above[]{kCustomRateR194,kCustomBySkillR194,kCustomLoR194,kCustomHiR194};
+    for(unsigned i=0;i<4;++i)if(sliders[i].t-26<above[i].b+(i==0?22:0))return false; // slider label 24 px above the track (rate row has its detail line)
+    return kCombatTabEnemiesR194.b<182;
+}
+static_assert(CombatCustomLayoutR194(),"R194 COMBAT tabs and CUSTOM sliders: no overlap, labels clear");
+inline const wchar_t* BlockRateLabelR194(int m){m=std::clamp(m,0,4);return m==1?L"OFTEN (50-85 %)":m==2?L"ALWAYS":m==3?L"ALWAYS PERFECT":m==4?L"OFF (game decides)":L"BY SKILL (40-75 %)";}
 constexpr UiRect kHomeHeadSyncOld{-10,-10,-5,-5};
 constexpr UiRect kHomeSave=EH5(experimental_features_h5::kHomeSave);
 constexpr UiRect kHomeFeaturesH5=EH5(experimental_features_h5::kHomeFeatures);
 constexpr UiRect kHomeExperiments=EH5(experimental_features_h5::kHomeCombat);
 constexpr bool HomeNavigationH5(){
     const UiRect rows[]{kHomeModeMono,kHomeModeCorrected,kVrikExperimentsD61,kH29TuneNav,kHomeFps,
-        kHomeVrConfig,kHomeGraphics,kHomeUi,kHomeDialogue,kHomeActions,kHomeVrikNative,kHomeVrikTracked,
+        kHomeVrConfig,kHomeGraphics,kHomeUi,kHomeDialogue,kHomeCombatR193,kHomeVrikNative,kHomeVrikTracked,
         kHomeVrikRecalibrate,kHomeVrikRestore43,kHomeBest,kHomeAutoRestore43,kHomeSave,kHomeFeaturesH5,kHomeExperiments};
     for(unsigned i=0;i<std::size(rows);++i){const auto r=rows[i];if(r.l<0||r.r>1070||r.t<100||r.b>672)return false;
         for(unsigned j=i+1;j<std::size(rows);++j){const auto s=rows[j];if(r.l<s.r&&s.l<r.r&&r.t<s.b&&s.t<r.b)return false;}}
@@ -423,7 +445,7 @@ constexpr UiRect kSimpleIconR160{620,132,1038,156};   // "Icon size" (VrUiUnifie
 constexpr UiRect kSimpleCraftR160{620,182,1038,206};  // "Crafting / minigame icon size" (VrMinigamePromptScale)
 constexpr UiRect kModeImmersiveR160{620,228,754,254},kModeMinimalR160{762,228,896,254},kModeNormalR160{904,228,1038,254}; // HUD mode
 constexpr UiRect SimpleTickR160(int i){return UiRect{(i&1)?834:620,262+30*(i>>1),(i&1)?1038:824,288+30*(i>>1)};}
-constexpr int kSimpleTicksR160=11; // 6 rows of 2, the last right slot is empty
+constexpr int kSimpleTicksR160=12; // 6 rows of 2 (R192: the last right slot = Palm look)
 constexpr UiRect kSimpleHudDistR160{620,468,1038,492}; // "HUD distance" (VrHudDistanceR110 / INF)
 constexpr bool SimpleHudLayoutR160(){
     const UiRect sliders[]{kSimpleIconR160,kSimpleCraftR160,kSimpleHudDistR160};
@@ -451,6 +473,7 @@ template<class S> auto SimpleTickFieldR160(S& s,int i,bool& inverted,const wchar
     case 8:label=L"Cinematic bars";return &s.live_d39.cinematicBarsR107;         // VrCinematicBarsR107
     case 9:label=L"Lockpick solid";return &s.live_d39.lockpickOpaqueR141;        // VrLockpickOpaqueR141
     case 10:label=L"Slow HUD follow";return &s.hud_lag_on;                       // VrHudFollowSlow (old VR HUD page tick)
+    case 11:label=L"Palm look";return &s.live_d39.palmLookR192;                 // R192 VrPalmLookR192 (IMMERSIVE / MINIMAL only)
     default:label=L"";return nullptr;
     }
 }
@@ -1058,6 +1081,8 @@ bool VrMenu::IsDeveloperPage(MenuPage page) noexcept
     case MenuPage::Home:case MenuPage::Graphics:case MenuPage::VrView:
     case MenuPage::VrHud:case MenuPage::VrHudElementControls:case MenuPage::VrHudElements:
     case MenuPage::VrControls:case MenuPage::ReleaseImmersionR92:return false;
+    case MenuPage::MeleeSensitivityH29:case MenuPage::StabSensitivityD67:case MenuPage::FistSensitivityH41: // R194: COMBAT > SENSITIVITY
+    case MenuPage::GuardSettingsH41:case MenuPage::ShieldBoxR120:return false;
     default:return true;
     }
 }
@@ -1163,13 +1188,30 @@ void VrMenu::HandleClick(int x, int y)
 #undef KCD2VR_MENU_CLICK_IMMERSIONEXPERIMENTS
 }
     if((page==MenuPage::ExperimentalFeaturesH5||page==MenuPage::DeepSeekLabH29)&&PtIn(kPageBack,x,y)){GoToPage(MenuPage::LiveExperimentsD39,-1);return;}
+    if((page==MenuPage::MeleeSensitivityH29||page==MenuPage::FistSensitivityH41||page==MenuPage::GuardSettingsH41)&&
+       sensitivityFromCombatR194_.load()&&PtIn(kPageBack,x,y)){releaseSectionR193_.store(1);GoToPage(MenuPage::ReleaseImmersionR92,-1);return;} // R194
     if(page!=MenuPage::Home && PtIn(kPageBack,x,y)){ GoToPage(MenuPage::Home,-1); return; }
     if(page==MenuPage::ReleaseImmersionR92){
         namespace release=release_menu_r92;namespace live=live_settings_d39;
-        // R124: three pages (page 3 = BLOCK message); < steps back, > steps forward, both wrap
-        if(PtIn(ED39(live::kMotionPrevD69),x,y)){releasePageR92_.store((releasePageR92_.load()+release::kPages-1)%release::kPages);MarkDirty();return;}
-        if(PtIn(ED39(live::kMotionNextD69),x,y)){releasePageR92_.store((releasePageR92_.load()+1)%release::kPages);MarkDirty();return;}
-        const auto& rows=release::rows(releasePageR92_.load());
+        // R124/R192: four pages; < steps back, > steps forward, both wrap
+        const unsigned sectionR193=releaseSectionR193_.load(); // R193: pages of this Home button only
+        if(sectionR193==1){ // R194 COMBAT: tabs, CUSTOM controls
+            if(PtIn(kCombatTabEnemiesR194,x,y)){releasePageR92_.store(release::firstPage(1));MarkDirty();return;}
+            if(PtIn(kCombatTabCustomR194,x,y)){releasePageR92_.store(release::kCustomEnemiesPage);MarkDirty();return;}
+            if(PtIn(kCombatTabSensR194,x,y)){sensitivityFromCombatR194_.store(true);GoToPage(MenuPage::MeleeSensitivityH29,+1);return;}
+            if(release::pageIn(1,releasePageR92_.load())==release::kCustomEnemiesPage){
+                auto custom=[&](){s.live_d39.enemyPresetR194=enemy_preset_r194::Custom;}; // any custom change = CUSTOM
+                if(PtIn(kCustomRateR194,x,y)){s.npc_block39=(std::clamp(s.npc_block39,0,4)+1)%5;custom();if(ApplyState(s))save();MarkDirty();return;}
+                if(PtIn(kCustomBySkillR194,x,y)){s.exp_direct_block_timing39=!s.exp_direct_block_timing39;custom();if(ApplyState(s))save();MarkDirty();return;}
+                const std::pair<UiRect,DragControl> drags[]{{kCustomDifficultyR194,DragControl::CustomDifficultyR194},{kCustomLoR194,DragControl::CustomLoR194},
+                    {kCustomHiR194,DragControl::CustomHiR194},{kCustomAllR194,DragControl::CustomAllR194}};
+                for(const auto& d:drags)if(PtIn(d.first,x,y)){drag_control_.store(static_cast<int>(d.second),std::memory_order_release);HandleDrag(x,y);return;}
+                return;
+            }
+        }
+        if(sectionR193!=1&&PtIn(ED39(live::kMotionPrevD69),x,y)){releasePageR92_.store(release::stepPage(sectionR193,releasePageR92_.load(),-1));MarkDirty();return;}
+        if(sectionR193!=1&&PtIn(ED39(live::kMotionNextD69),x,y)){releasePageR92_.store(release::stepPage(sectionR193,releasePageR92_.load(),+1));MarkDirty();return;}
+        const auto& rows=release::rows(release::pageIn(sectionR193,releasePageR92_.load()));
         for(unsigned i=0;i<rows.size();++i)if(PtIn(ED39(live::rowRect(i)),x,y)&&release::advance(s,rows[i].id)){
             if(ApplyState(s))save();
             if(rows[i].id==release::Row::Gore){const int pak=kcd2vr::gorepak50::state.load(); // R98: pak state goes to KCD2VR.log only, never to the menu
@@ -1239,30 +1281,24 @@ void VrMenu::HandleClick(int x, int y)
     }
     if(page==MenuPage::Home){
         if(developer_mode::Enabled()&&PtIn(kVrikExperimentsD61,x,y)){GoToPage(MenuPage::VrikExperimentsD61,+1);return;}
-        if(developer_mode::Enabled()&&PtIn(kH29TuneNav,x,y)){GoToPage(MenuPage::MeleeSensitivityH29,+1);return;}
+        if(developer_mode::Enabled()&&PtIn(kH29TuneNav,x,y)){sensitivityFromCombatR194_.store(false);GoToPage(MenuPage::MeleeSensitivityH29,+1);return;}
         if(PtIn(kHomeModeMono,x,y)){ s.stereo_mode=0; s.cyclopean_mode=0; ApplyState(s); save(); return; }
         if(PtIn(kHomeModeCorrected,x,y)){ selectStereoD81R2(); return; }
-        if(PtIn(kHomeFps,x,y)){
-            s.fps_cap_enabled=!s.fps_cap_enabled;
-            ApplyState(s);
-            if(callbacks_.apply_fps_cap) callbacks_.apply_fps_cap(callbacks_.context,s.fps_cap_enabled?s.fps_cap_target:0.0f);
-            save(); MarkDirty(); return;
-        }
         if(PtIn(kHomeVrConfig,x,y)){ GoToPage(MenuPage::VrView,+1); return; }
         if(PtIn(kHomeGraphics,x,y)){ GoToPage(MenuPage::Graphics,+1); return; }
         if(PtIn(kHomeUi,x,y)){ GoToPage(MenuPage::VrHud,+1); return; }
-        if(PtIn(kHomeDialogue,x,y)){ GoToPage(MenuPage::ReleaseImmersionR92,+1); return; }
-        if(PtIn(kHomeActions,x,y)){ GoToPage(MenuPage::VrControls,+1); return; }
+        if(PtIn(kHomeDialogue,x,y)){ releaseSectionR193_.store(0);releasePageR92_.store(release_menu_r92::pageIn(0,releasePageR92_.load()));GoToPage(MenuPage::ReleaseImmersionR92,+1); return; }
+        if(PtIn(kHomeCombatR193,x,y)){ releaseSectionR193_.store(1);releasePageR92_.store(release_menu_r92::firstPage(1));GoToPage(MenuPage::ReleaseImmersionR92,+1); return; } // R193
         if(developer_mode::Enabled()&&PtIn(kHomeFeaturesH5,x,y)){GoToPage(MenuPage::LiveExperimentsD39,+1);return;}
         if(developer_mode::Enabled()&&PtIn(kHomeExperiments,x,y)){ GoToPage(MenuPage::Experiments,+1); return; } // R59.16C10d
         if(PtIn(kHomeVrikNative,x,y)){ if(callbacks_.set_vrik_mode) callbacks_.set_vrik_mode(callbacks_.context,false); MarkDirty(); return; }
         if(PtIn(kHomeVrikTracked,x,y)){ if(callbacks_.set_vrik_mode) callbacks_.set_vrik_mode(callbacks_.context,true); MarkDirty(); return; }
         if(PtIn(kHomeVrikRecalibrate,x,y)){ if(callbacks_.request_vrik_recalibrate) callbacks_.request_vrik_recalibrate(callbacks_.context); MarkDirty(); return; }
-        if(PtIn(kHomeVrikRestore43,x,y)){ if(callbacks_.request_vrik_restore) callbacks_.request_vrik_restore(callbacks_.context); MarkDirty(); return; } // C43
-        if(PtIn(kHomeAutoRestore43,x,y)){ s.calibration_auto_restore43=!s.calibration_auto_restore43; ApplyState(s); save(); diagnostic_trace::Write(s.calibration_auto_restore43?"C43-HOME VrCalibrationAutoRestore=ON":"C43-HOME VrCalibrationAutoRestore=OFF"); MarkDirty(); return; }
-        if(PtIn(kHomeBest,x,y)){ s.balanced_graphics=!s.balanced_graphics; ApplyState(s); save(); return; }
+        if(developer_mode::Enabled()&&PtIn(kHomeVrikRestore43,x,y)){ if(callbacks_.request_vrik_restore) callbacks_.request_vrik_restore(callbacks_.context); MarkDirty(); return; } // C43
+        if(developer_mode::Enabled()&&PtIn(kHomeAutoRestore43,x,y)){ s.calibration_auto_restore43=!s.calibration_auto_restore43; ApplyState(s); save(); diagnostic_trace::Write(s.calibration_auto_restore43?"C43-HOME VrCalibrationAutoRestore=ON":"C43-HOME VrCalibrationAutoRestore=OFF"); MarkDirty(); return; }
+        if(developer_mode::Enabled()&&PtIn(kHomeBest,x,y)){ s.balanced_graphics=!s.balanced_graphics; ApplyState(s); save(); return; }
         
-        if(PtIn(kHomeSave,x,y)){ if(callbacks_.save_settings) (void)callbacks_.save_settings(callbacks_.context); return; }
+        if(developer_mode::Enabled()&&PtIn(kHomeSave,x,y)){ if(callbacks_.save_settings) (void)callbacks_.save_settings(callbacks_.context); return; }
         if(PtIn(kUtilityRecenter,x,y)){ if(callbacks_.request_recenter) callbacks_.request_recenter(callbacks_.context); return; }
         return;
     }
@@ -1450,7 +1486,7 @@ void VrMenu::HandleClick(int x, int y)
         if(begin_drag(kH29Cut,DragControl::H29Punch)||begin_drag(kH29Stab,DragControl::FistTravelH41))return;return;
     }
     if(page==MenuPage::GuardSettingsH41){
-        if(begin_drag(kGuardWidthD56,DragControl::GuardWidthH41)||begin_drag(kGuardHeightD56,DragControl::GuardHeightH41)||begin_drag(kGuardDepthD61,DragControl::GuardDepthD61)||begin_drag(kGuardEntryD56,DragControl::GuardEntryH41)||begin_drag(kGuardReleaseD56,DragControl::GuardReleaseH41)||begin_drag(kGuardSettleD56,DragControl::H29Block)||begin_drag(kGuardDistanceD56,DragControl::GuardDistanceD56))return;return;
+        if(begin_drag(kGuardWidthD56,DragControl::GuardWidthH41)||begin_drag(kGuardHeightD56,DragControl::GuardHeightH41)||begin_drag(kGuardDepthD61,DragControl::GuardDepthD61)||begin_drag(kGuardEntryD56,DragControl::GuardEntryH41)||begin_drag(kGuardDwellR177,DragControl::GuardDwellR177)||begin_drag(kGuardReleaseD56,DragControl::GuardReleaseH41)||begin_drag(kGuardSettleD56,DragControl::H29Block)||begin_drag(kGuardDistanceD56,DragControl::GuardDistanceD56))return;return;
     }
     if(page==MenuPage::DefenceWindowsH41){
         if(PtIn(kNativeFinisherD61,x,y)){s.native_finisher_test_d61=!s.native_finisher_test_d61;ApplyState(s);MarkDirty();return;}
@@ -1572,6 +1608,11 @@ void VrMenu::HandleDrag(int x, int y)
     const auto dc=static_cast<DragControl>(drag_control_.load(std::memory_order_acquire));
     auto t=[&](const UiRect& r){ return SliderTFromX(r,x); };
     switch(dc){
+    // R194 COMBAT > CUSTOM: every slider selects CUSTOM; low / high skill speed = BY SKILL on, all-skill speed = BY SKILL off
+    case DragControl::CustomDifficultyR194:s.npc_difficulty_percent=std::round(t(kCustomDifficultyR194)*100.f);s.live_d39.enemyPresetR194=enemy_preset_r194::Custom;break;
+    case DragControl::CustomLoR194:s.exp_direct_block_lo39=std::round((1.f+t(kCustomLoR194)*2.f)*10.f)/10.f;s.exp_direct_block_timing39=true;s.live_d39.enemyPresetR194=enemy_preset_r194::Custom;break;
+    case DragControl::CustomHiR194:s.exp_direct_block_hi39=std::round((1.f+t(kCustomHiR194)*2.f)*10.f)/10.f;s.exp_direct_block_timing39=true;s.live_d39.enemyPresetR194=enemy_preset_r194::Custom;break;
+    case DragControl::CustomAllR194:s.npc_defense_speed=std::round((1.f+t(kCustomAllR194)*2.f)*20.f)/20.f;s.exp_direct_block_timing39=false;s.live_d39.enemyPresetR194=enemy_preset_r194::Custom;break;
     case DragControl::BladeAxisH41:s.blade_axis_cosine_h41=std::round((.60f+t(kH29Punch)*.35f)*100.f)/100.f;break;
     case DragControl::StabSpeedD67:s.thrust_d67[meleeTypeH29_.load()].speed=std::round((.65f+t(kH29Cut)*2.35f)*20.f)/20.f;break;
     case DragControl::StabTravelD67:s.thrust_d67[meleeTypeH29_.load()].travel=std::round((.06f+t(kH29Stab)*.24f)*1000.f)/1000.f;break;
@@ -1584,6 +1625,7 @@ void VrMenu::HandleDrag(int x, int y)
     case DragControl::GuardWidthH41:s.guard_width_h41=.25f+t(kGuardWidthD56)*.50f;break;
     case DragControl::GuardHeightH41:s.guard_height_h41=.10f+t(kGuardHeightD56)*.25f;break;
     case DragControl::GuardEntryH41:s.exp_guard_enter_speed=t(kGuardEntryD56)*5.f;break;
+    case DragControl::GuardDwellR177:s.exp_guard_enter_dwell_ms=int(std::round(t(kGuardDwellR177)*600.f/10.f)*10);break; // R177: same 0..600 ms as COMBAT TUNING
     case DragControl::GuardReleaseH41:s.exp_guard_exit_speed=t(kGuardReleaseD56)*6.f;break;
     case DragControl::ShieldBoxR120:{const unsigned i=shieldSlotR120_.load(std::memory_order_acquire); // R120
         if(i<shield_block_r120::Count){const auto& spec=shield_block_r120::kSpecs[i];
@@ -1783,11 +1825,12 @@ void VrMenu::CommitDrag(DragControl released)
     VrMenuState s{}; ReadState(s);
     auto save=[&](){ if(callbacks_.save_settings) (void)callbacks_.save_settings(callbacks_.context); };
     if(released==DragControl::StabSpeedD67||released==DragControl::StabTravelD67){ApplyState(s);save();return;}
+    if(released>=DragControl::CustomDifficultyR194&&released<=DragControl::CustomAllR194){ApplyState(s);save();return;} // R194 COMBAT > CUSTOM
     if(released==DragControl::HudDistanceR110){ApplyState(s);save();return;} // R125: distance / INF saved on release
     if(released==DragControl::CraftUiSizeR145){prompt_policy_d80::Refresh();save();return;} // R145 VrMinigamePromptScale saved on release
     if(released>=DragControl::M1DifficultyR109&&released<=DragControl::M3KillEnergyR109){ApplyState(s);save();return;} // R109 MISC sliders: apply + save on release
     if(released==DragControl::NpcDifficulty||released==DragControl::NpcDefenseSpeed||released==DragControl::NpcUnarmedSpacing){ApplyState(s);save();return;}
-    if(released==DragControl::BladeAxisH41||released==DragControl::FistTravelH41||released==DragControl::GuardDistanceD56||released==DragControl::GuardDepthD61||released==DragControl::GuardWidthH41||released==DragControl::GuardHeightH41||released==DragControl::GuardEntryH41||released==DragControl::GuardReleaseH41||released==DragControl::ShieldBoxR120||released==DragControl::PbWindowH41||released==DragControl::MsWindowH41||released==DragControl::H29TravelR8||released==DragControl::FingerMiddleShiftH31||released==DragControl::FingerMiddleMedialH31||released==DragControl::H29Cut||released==DragControl::H29Stab||released==DragControl::H29Punch||released==DragControl::H29Block||released==DragControl::FingerMiddleLateralC54){ApplyState(s);save();return;}
+    if(released==DragControl::BladeAxisH41||released==DragControl::FistTravelH41||released==DragControl::GuardDistanceD56||released==DragControl::GuardDepthD61||released==DragControl::GuardWidthH41||released==DragControl::GuardHeightH41||released==DragControl::GuardEntryH41||released==DragControl::GuardDwellR177||released==DragControl::GuardReleaseH41||released==DragControl::ShieldBoxR120||released==DragControl::PbWindowH41||released==DragControl::MsWindowH41||released==DragControl::H29TravelR8||released==DragControl::FingerMiddleShiftH31||released==DragControl::FingerMiddleMedialH31||released==DragControl::H29Cut||released==DragControl::H29Stab||released==DragControl::H29Punch||released==DragControl::H29Block||released==DragControl::FingerMiddleLateralC54){ApplyState(s);save();return;}
     if(released==DragControl::GameFov){ save(); return; } // shared setting persists from either slider
     if(released==DragControl::CameraBack || released==DragControl::CameraHeight || released==DragControl::Zoom || released==DragControl::SourceFov || released==DragControl::CenterY || released==DragControl::CorrectedPlanarY || released==DragControl::ProjectionPitchTrim || released==DragControl::FlatScreenScale || released==DragControl::DepthStereoStrength){ save(); return; }
     if(released==DragControl::MergedMesh){ if(callbacks_.apply_merged_mesh) callbacks_.apply_merged_mesh(callbacks_.context,s.merged_mesh_target); save(); return; }
@@ -1861,8 +1904,7 @@ void VrMenu::DrawPanel(HDC dc, const VrMenuState& s)
         DrawButton(dc,font_small_,kHomeModeCorrected,L"STEREO",s.stereo_mode==3?kAccent:kPanel2);
         if(developer_mode::Enabled())DrawButton(dc,font_small_,kVrikExperimentsD61,L"VRIK EXPERIMENTS  >",kPanel2);
         if(developer_mode::Enabled())DrawButton(dc,font_small_,kH29TuneNav,L"WEAPON / FIST SENSITIVITY  >",kPanel2);
-        wchar_t fpsHome[96]{}; std::swprintf(fpsHome,96,L"FPS LIMIT: %s  %.0f",s.fps_cap_enabled?L"ON":L"OFF",static_cast<double>(s.fps_cap_target));
-        DrawButton(dc,font_small_,kHomeFps,fpsHome,s.fps_cap_enabled?kAccent:kPanel2);
+        // R193: left page = MONO / STEREO only (FPS limit is on GRAPHICS)
         
     }
     int slide=0;
@@ -1886,17 +1928,19 @@ void VrMenu::DrawPanel(HDC dc, const VrMenuState& s)
         pageTitle(L"KCD2VR",L"Choose a section");
         DrawButton(dc,font_title_,kHomeVrConfig,L"VR CONFIG",RGB(188,158,104));
         DrawButton(dc,font_title_,kHomeGraphics,L"GRAPHICS",RGB(188,158,104));
-        DrawButton(dc,font_title_,kHomeUi,L"UI SETTINGS",RGB(188,158,104));
+        DrawButton(dc,font_title_,kHomeUi,L"HUD",RGB(188,158,104));
         DrawButton(dc,font_title_,kHomeDialogue,L"IMMERSION AND CONTROLS",RGB(188,158,104));
-        DrawButton(dc,font_small_,kHomeActions,L"UI / CONTROLLER CONTROLS",RGB(176,148,98));
+        DrawButton(dc,font_title_,kHomeCombatR193,L"COMBAT",RGB(188,158,104)); // R193
         if(developer_mode::Enabled())DrawButton(dc,font_small_,kHomeFeaturesH5,L"EXPERIMENTS / LIVE SETTINGS",RGB(176,148,98));
         if(developer_mode::Enabled())DrawButton(dc,font_small_,kHomeExperiments,L"COMBAT EXPERIMENTS",RGB(176,148,98));
-        DrawButton(dc,font_small_,kHomeVrikNative,L"NATIVE TOUCH",s.vrik_mode==0?kAccent:kPanel2);
+        DrawButton(dc,font_small_,kHomeVrikNative,L"NATIVE CONTROLS",s.vrik_mode==0?kAccent:kPanel2);
         DrawButton(dc,font_small_,kHomeVrikTracked,L"VRIK",s.vrik_mode!=0?kAccent:kPanel2);
-        DrawButton(dc,font_tiny_?font_tiny_:font_small_,kHomeVrikRecalibrate,L"RECALIBRATE (SHIFT+F8)",RGB(176,148,98));
+        DrawButton(dc,font_small_,kHomeVrikRecalibrate,L"RECALIBRATE VRIK (SHIFT+F8)",RGB(176,148,98));
+        if(developer_mode::Enabled()){ // R193: player Home = the five menus + VRIK / NATIVE CONTROLS / RECALIBRATE only
         DrawButton(dc,font_tiny_?font_tiny_:font_small_,kHomeVrikRestore43,L"RESTORE CALIBRATION",RGB(176,148,98)); // C43: stored F8 profile, no T-pose
         DrawCheck(dc,font_small_,kHomeBest,s.balanced_graphics,L"Best VR settings");
         DrawCheck(dc,font_tiny_?font_tiny_:font_small_,kHomeAutoRestore43,s.calibration_auto_restore43,L"Auto restore calibration"); // C43
+        }
         if(s.vrik_calibration_ui_state!=0){
             const wchar_t* cal=L"MAKE A T-POSE";
             wchar_t counter[32]{};
@@ -1907,7 +1951,7 @@ void VrMenu::DrawPanel(HDC dc, const VrMenuState& s)
             Text(dc,font_normal_,cal,130,462,370,34,kAccent,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
             Text(dc,font_title_,counter,130,498,370,58,kAccent,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
         }
-        DrawButton(dc,font_small_,kHomeSave,L"SAVE SETTINGS",RGB(176,148,98));
+        if(developer_mode::Enabled())DrawButton(dc,font_small_,kHomeSave,L"SAVE SETTINGS",RGB(176,148,98)); // R193: every control saves itself
         Text(dc,font_tiny_?font_tiny_:font_small_,s.vrik_calibration_persistence_state<0?
             L"CALIBRATION NOT SAVED: check write permission for KCD2VR.ini. Current in-memory data remains active.":s.vrik_finger_capture_active?
             L"Native finger capture: relax, press BOTH triggers, wait for fists, then release.":
@@ -2007,13 +2051,35 @@ void VrMenu::DrawPanel(HDC dc, const VrMenuState& s)
 #undef KCD2VR_MENU_DRAW_VRACTIONS
 } else if(page==MenuPage::ReleaseImmersionR92){
         namespace release=release_menu_r92;namespace live=live_settings_d39;
-        pageTitle(L"IMMERSION AND CONTROLS",developer_mode::Enabled()?L"Developer mode / shared gameplay settings":L"Release mode / shared gameplay settings");
+        const unsigned sectionR193=releaseSectionR193_.load();
+        pageTitle(release::kSectionTitle[release::sectionIndex(sectionR193)],developer_mode::Enabled()?L"Developer mode / shared gameplay settings":L"Release mode / shared gameplay settings");
         DrawButton(dc,font_small_,kPageBack,L"< BACK",RGB(176,148,98));
-        const unsigned selected=releasePageR92_.load()%release::kPages; // R124: 3 pages
-        {wchar_t pg[24]{};std::swprintf(pg,std::size(pg),L"< PAGE %u",(selected+release::kPages-1)%release::kPages+1);
-         DrawButton(dc,font_small_,ED39(live::kMotionPrevD69),pg,kPanel2);
-         std::swprintf(pg,std::size(pg),L"PAGE %u/%u >",selected+1,release::kPages);
-         DrawButton(dc,font_small_,ED39(live::kMotionNextD69),pg,kAccent);}
+        const unsigned selected=release::pageIn(sectionR193,releasePageR92_.load()); // R192/R193: titled pages of this Home button
+        if(sectionR193==1){ // R194 COMBAT tabs
+            DrawButton(dc,font_small_,kCombatTabEnemiesR194,L"ENEMIES",selected==release::firstPage(1)?kAccent:kPanel2);
+            DrawButton(dc,font_small_,kCombatTabCustomR194,L"CUSTOM",selected==release::kCustomEnemiesPage?kAccent:kPanel2);
+            DrawButton(dc,font_small_,kCombatTabSensR194,L"SENSITIVITY >",kPanel2);
+        }
+        if(sectionR193==1&&selected==release::kCustomEnemiesPage){ // R194 COMBAT > CUSTOM
+            wchar_t label[160]{};std::swprintf(label,std::size(label),L"Block rate: %ls",BlockRateLabelR194(s.npc_block39));
+            DrawButton(dc,font_small_,kCustomRateR194,label,kPanel2);
+            Text(dc,font_normal_,L"How often an enemy blocks your swing (real fights).",620,209,418,20,kText,DT_LEFT|DT_VCENTER|DT_SINGLELINE);
+            std::swprintf(v,128,L"%.0f %%",double(s.npc_difficulty_percent));
+            DrawSlider(dc,font_small_,kCustomDifficultyR194,L"Difficulty: 0 % native AI .. 100 % hardest",s.npc_difficulty_percent*.01f,v);
+            DrawButton(dc,font_small_,kCustomBySkillR194,s.exp_direct_block_timing39?L"Block speed: BY SKILL (low .. high skill)":L"Block speed: SAME FOR ALL",s.exp_direct_block_timing39?kAccent:kPanel2);
+            std::swprintf(v,128,L"x%.1f",double(s.exp_direct_block_lo39));
+            DrawSlider(dc,font_small_,kCustomLoR194,L"Block speed, low skill enemy (skill 0)",(s.exp_direct_block_lo39-1.f)*.5f,v);
+            std::swprintf(v,128,L"x%.1f",double(s.exp_direct_block_hi39));
+            DrawSlider(dc,font_small_,kCustomHiR194,L"Block speed, high skill enemy (skill 30)",(s.exp_direct_block_hi39-1.f)*.5f,v);
+            std::swprintf(v,128,L"x%.2f",double(s.npc_defense_speed));
+            DrawSlider(dc,font_small_,kCustomAllR194,L"Block speed, all enemies (BY SKILL off)",(s.npc_defense_speed-1.f)*.5f,v);
+            Text(dc,font_small_,L"Moving a low / high slider turns BY SKILL on, the all-enemies slider turns it off. Any change here selects CUSTOM on the ENEMIES tab. NORMAL / HARDCORE there overwrite these values.",620,546,418,50,kMuted,DT_LEFT|DT_WORDBREAK);
+        }
+        {const unsigned count=release::pageCount(sectionR193),number=selected-release::firstPage(sectionR193)+1;
+         if(count>1&&sectionR193!=1){DrawButton(dc,font_small_,ED39(live::kMotionPrevD69),L"< PAGE",kAccent);DrawButton(dc,font_small_,ED39(live::kMotionNextD69),L"PAGE >",kAccent);}
+         wchar_t pg[96]{};if(count>1&&sectionR193!=1)std::swprintf(pg,std::size(pg),L"%ls %u / %u",release::pageTitle(selected),number,count);
+         else std::swprintf(pg,std::size(pg),L"%ls",release::pageTitle(selected));
+         Text(dc,font_small_,pg,786,88,156,24,kMuted,DT_CENTER|DT_VCENTER|DT_SINGLELINE);}
         const auto& rows=release::rows(selected);
         for(unsigned n=0;n<rows.size();++n){
             if(rows[n].id==release::Row::None)continue;
@@ -2029,12 +2095,12 @@ void VrMenu::DrawPanel(HDC dc, const VrMenuState& s)
         DrawButton(dc,font_small_,kPageBack,L"< BACK",RGB(176,148,98));
         const auto selectedPage=liveGroupD39_.load();
         const auto selected=live::group(selectedPage);
-        if(selected==live::Group::Body||selected==live::Group::MotionD67||selected==live::Group::Combat||selected==live::Group::Hands||selected==live::Group::Objects||selected==live::Group::Gear){
-            const bool second=selectedPage==live::kGearPage3R125||selectedPage==live::kGearPage2R118||selectedPage==live::kBodyPage2D76||live::motionPage2D69(selectedPage)||selectedPage==live::kCombatPage2D70||selectedPage==live::kHandsPage2D71||selectedPage==live::kObjectsPage2D72||selectedPage==live::kObjectsPage3R158;
-            const bool body=selected==live::Group::Body,combat=selected==live::Group::Combat,hands=selected==live::Group::Hands,objects=selected==live::Group::Objects,gear=selected==live::Group::Gear;
-            DrawButton(dc,font_small_,ED39(live::kMotionPrevD69),L"< PAGE 1",second?kPanel2:kAccent);
-            Text(dc,font_small_,gear?(selectedPage==live::kGearPage3R125?L"HUD + impale 3 / 3":second?L"Controller 2 / 3":L"Gear 1 / 3"):body?(second?L"Body trials 2 / 2":L"Body controls 1 / 2"):objects?(selectedPage==live::kObjectsPage3R158?L"Held props 3 / 3":second?L"INSTANT 2 / 3":L"Objects 1 / 3"):hands?(second?L"VRIK trials 2 / 2":L"VRIK controls 1 / 2"):combat?(second?L"Combat trial 2 / 2":L"Combat controls 1 / 2"):(second?L"VRIK trials 2 / 2":L"VRIK controls 1 / 2"),786,88,156,24,kMuted,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
-            DrawButton(dc,font_small_,ED39(live::kMotionNextD69),L"PAGE 2 >",second?kAccent:kPanel2);
+        if(live::pagesIn(selected)>1){ // R184: page title + n / N of the selected tab, < > walk its pages
+            const unsigned numberR184=live::pageNumber(selectedPage),countR184=live::pagesIn(selected);
+            DrawButton(dc,font_small_,ED39(live::kMotionPrevD69),L"< PAGE",numberR184>1?kAccent:kPanel2);
+            wchar_t pageR184[96]{};std::swprintf(pageR184,std::size(pageR184),L"%ls %u / %u",live::pageTitle(selectedPage),numberR184,countR184);
+            Text(dc,font_small_,pageR184,786,88,156,24,kMuted,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+            DrawButton(dc,font_small_,ED39(live::kMotionNextD69),L"PAGE >",numberR184<countR184?kAccent:kPanel2);
         }
         for(unsigned n=0;n<live::kTabs.size();++n)DrawButton(dc,font_small_,ED39(live::kTabs[n]),live::kTabsText[n],unsigned(selected)==n?kAccent:kPanel2);
         const auto& rows=live::rows(selectedPage);
@@ -2120,6 +2186,7 @@ void VrMenu::DrawPanel(HDC dc, const VrMenuState& s)
         std::swprintf(v,128,L"%.0f cm",double(s.guard_height_h41)*200);DrawSlider(dc,font_small_,kGuardHeightD56,L"Vertical plane height",(s.guard_height_h41-.1f)/.25f,v);
         std::swprintf(v,128,L"%.0f cm",double(s.guard_depth_d61)*100);DrawSlider(dc,font_small_,kGuardDepthD61,L"Face-level block box depth",(s.guard_depth_d61-.10f)/.70f,v);
         std::swprintf(v,128,L"%.1f m/s",double(s.exp_guard_enter_speed));DrawSlider(dc,font_small_,kGuardEntryD56,L"Block ON: maximum movement speed",s.exp_guard_enter_speed/5.f,v);
+        std::swprintf(v,128,L"%d ms",s.exp_guard_enter_dwell_ms);DrawSlider(dc,font_small_,kGuardDwellR177,L"Block ON: hold the guard this long first",float(s.exp_guard_enter_dwell_ms)/600.f,v); // R177
         std::swprintf(v,128,L"%.1f m/s",double(s.exp_guard_exit_speed));DrawSlider(dc,font_small_,kGuardReleaseD56,L"Block release: forward movement speed",s.exp_guard_exit_speed/6.f,v);
         std::swprintf(v,128,L"%.0f%%",double(s.block_sensitivity_h29)*100);DrawSlider(dc,font_small_,kGuardSettleD56,L"Block settling sensitivity",s.block_sensitivity_h29-.5f,v);
         std::swprintf(v,128,L"%.0f cm",double(s.guard_body_distance_d56)*100);DrawSlider(dc,font_small_,kGuardDistanceD56,L"Maximum guard hand distance from chest",(s.guard_body_distance_d56-.35f)/.70f,v);

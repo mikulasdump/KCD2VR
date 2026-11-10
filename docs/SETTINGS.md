@@ -12,6 +12,34 @@ tested and called working is ON when its key is missing, a saved OFF stays OFF. 
 
 values below marked "shipped" are what the KCD2VR.ini in the source root has.
 
+## Experiments: where each setting is (R184)
+
+every setting has one row. a tab with more pages: PAGE < > at the top walks them. NPCS is now WEAPONS, REPAIRS is now RANGED.
+
+- **BODY 1/1: Body**: 6DOF body follows head, Roomscale movement, Body movement smoothing, Right-stick turn, Shoulder travel warning, Physical walking 1:1 trial, Leaning height threshold
+- **VRIK 1/2: Hands**: Free-hand contact detail, Hand-to-hand collision, Native hand bodies, Grab hand stays on controller, Finger contact trial, Extra hand filtering, Hand presentation timing, Elbow preference
+- **VRIK 2/2: Elbows**: Continuous elbow target, Elbow trial: outward preference, Elbow trial: backward preference, Elbow pole hysteresis trial, Extra hand prediction trial, Contact stability trial, Free-hand contact budget fairness
+- **ALCHEMY 1/1: Alchemy**: Tracked alchemy hands, Alchemy work mode, Alchemy pickup reach, Legacy work gestures, Craft reach trial, Legacy alchemy head trial, Alchemy tool contact trial, Alchemy release handoff trial
+- **SMITH 1/1: Smithing**: Tracked smithing hands, Smithing work mode, Smith world tool collision, Anvil support, Smith tools follow hands, Station torso follows head, Station chest clearance
+- **GEAR 1/2: Controls**: Controller layout, Quick access modifier, Shoulder holster layout, Knives: hip / chest pouch, Knives: chest pouch too, Index-finger pointing Quick Talk, Torch shoulder gesture, Visor temple gesture
+- **GEAR 2/2: Holsters**: X tap = Follow, Hide weapons on your back, Hide all weapons at crafting tables
+- **VIEW 1/2: HUD**: HUD at infinity (flat, never double), Combat direction cross, Minimal HUD, Tutorial messages, HUD: weapon/potion slots only while selecting, No black frames: hold last picture, Cutscene 16:9 bars, Eye colours: sRGB swapchain
+- **VIEW 2/2: Map**: Lockpicking lock: solid, Static paper map, Paper map size, Map performance trial, Map second-hand support
+- **OBJECTS 1/3: Interactions**: Item pickup reach, Physical interaction session, INSTANT interactions, INSTANT activities, Look selection from your eye, Held-object stow button, Dog petting, Face washing gesture trial
+- **OBJECTS 2/3: Props**: Scenery props: size, Small props in the hand, Loose scenery props (swap), Held small props: firm grip, Prop impact sounds, Small-object wake lab, Right physical prop, Left physical prop
+- **OBJECTS 3/3: Handover**: Pickup camera handover trial, Faster native pickup handover trial, First object placement trial, Dice: point to choose (trial)
+- **WEAPONS 1/2: Weapon in hand**: Weapon drawn with the hand, Weapon in hand: depth, Fixed sword grip, Rigid primary grip trial, Same-cycle weapon placement trial, Grip anchored in free space, Swing power: arm, not wrist, Held-weapon wall slide
+- **WEAPONS 2/2: Two hands**: Two-hand weight feel, Two-hand primary influence trial, Additional primary-hand influence, Two-hand release continuity, Current weapon arc coverage, Swing sound with your swing, Weapon grip release
+- **COMBAT 1/5: Enemies**: Free targeting, Enemies block your swing, Attack step veto, Attack auto-turn veto, Global native dodge window, Hit reaction by body region, Include stamina-only hits, Weapon kicks vs enemies
+- **COMBAT 2/5: Free targeting +**: FREE PLUS: turn limit
+- **COMBAT 3/5: Combos**: Combo: wait for the next swing, Combo: longest wait, Combo: keep the slot open, Combo: slot time, Combo: next direction help, Combo finish requirement, INSTANT masterstrikes / combos, Native paired backup
+- **COMBAT 4/5: Directions**: Attack direction, Cut from below, Stab direction, Stab follow-through trial, Masterstrike reaction trial, Your finishers / masterstrikes, NPC finishers / combos on you, Punch stroke trial
+- **COMBAT 5/5: Clinch + impale**: Player clinch initiation, Player clinch distance, Unarmed clinch trial, Impale: fast death, Impale: blade goes in fully, Physical corpse dragging, Corpse search, Shield block box
+- **RANGED 1/2: Bow + crossbow**: Physical bow shot direction trial, Bow arm-line aim, Held arrow orientation, Stowed bow visibility, Crossbow / gun: RT alone shoots, Hand-driven crossbow reload, Crossbow reload route, Fast reload transitions
+- **RANGED 2/2: Hand pull**: Heavy crossbow: pull string by hand, Medium crossbow: pull string by hand, Heavy crossbow crank travel, Stone throw (crouched)
+- **VRIK+ 1/1: VRIK body**: Chest under the view: back, Body follows headset (trial), Body follows: free look, Body height, Horse riding VRIK, Start in VRIK, Start at Henry's eye height, Brief missing-body-pose hold
+- **CRAFT+ 1/1: Crafting**: Alchemy: select what you look at, Alchemy transfer speed, Smith stroke recovery, Smith LT anvil assist, INSTANT crafting
+
 ## hands and weapons
 
 **Motion timing** (`VrMotionTrialD67`, Home > VRIK EXPERIMENTS, or EXPERIMENTS / LIVE SETTINGS > VRIK > "Hand
@@ -62,10 +90,13 @@ contact. none of these create rigid bodies.
   props. two hands can't claim the same entity.
 - **Loose scenery props (swap)** (`VrSceneryPropSwapR100`, Objects page 3 since R159, shipped ON): Grip on a mug/plate/candle that is
   level mesh makes it a loose prop you can hold. only where the mesh has a usable path.
-- **Scenery props: size** (`VrSceneryBigPropsR158`, Experiments > Objects page 3, shipped OFF): SMALL = up to 65 cm
+- **Scenery props: size** (`VrSceneryBigPropsR158`, Experiments > Objects page 3, shipped ON since R166 - Miki's INI; a missing key = OFF): SMALL = up to 65 cm
   across, same as before. UP TO 1 M also takes stools, baskets and small crates. mass stays capped (1.5 kg loose copy,
   3 kg scenery) so a big one carries like a light box, one hand only. reach to the box centre grows to max 55 cm
   so you can grab it at the edge
+- **Weapon in hand: depth** (`VrMeleeGripDepthR168`, WEAPONS page 1 row 2, R168, shipped 0.5 since R190): moves sword /
+  axe / mace / dagger inside the hand, + = deeper (toward the wrist / palm), - = further out, -2..4 cm in 0.5 cm steps,
+  live. `VrWristFromGripCm` moves the whole hand with the weapon instead.
 - **Corpse dragging** (Experiments > NPCS "Physical corpse dragging"): needs a dead body from the game and an empty
   hand, no recorder or physical combat needed.
 - **Corpse search** (`VrCorpseSearchSqueezeR89`, VRIK page 2, only used while corpse dragging is ON). ALWAYS (shipped):
@@ -132,29 +163,102 @@ does not explain every missed hit.
 combo and defence options leave eligibility, perks, stamina, armor and results to the game. a visible reaction is not
 proof that a named combo was accepted.
 
-NPC defence by skill (`VrDirectNpcBlockBySkill`, shipped ON): block raise, parry raise and dodge clip speed come from the
-NPC's own melee skill. it also rolls once per swing if your opponent defends: 25 % at skill 0, 75 % at skill 30 and
-more (the game's wh_cs_ForceBlock, only in a real fight: Henry in combat, no dialogue / cutscene / menu; R155). `VrDirectNpcBlock` 1 = 65 %, 2 = always,
+NPC defence by skill (`VrDirectNpcBlockBySkill`, shipped OFF since R190, Miki's hardcore setup): block raise, parry raise and dodge clip speed come from the
+NPC's own melee skill. it also rolls once per swing if your opponent defends: 40 % at skill 0 (R177, was 25 %), 75 % at skill 30 and
+more (the game's wh_cs_ForceBlock, only in a real fight: Henry in combat, no dialogue / cutscene / menu; R155). `VrDirectNpcBlock` 1 = 50 % at skill 0 .. 85 % at skill 30 (R177, was 65 %), 2 = always,
 3 = always perfect block. never with a practice / quest weapon in your hand (the wooden sword of the prologue sparring, R156): the sparring
-partner is scripted to let you hit him, he is not forced to block. note: `VrDirectNpcBlock` 0 does not switch the roll off while BY SKILL is on.
+partner is scripted to let you hit him, he is not forced to block. `VrDirectNpcBlock` 4 = OFF (R178): the roll never runs, enemies block only when the game itself decides to (the BY SKILL raise speed still applies to those). Experiments NPCS row 7 cycles all five.
 
-**Tutorials (training fights)** (`VrTutorialNativeHitsR159`, Experiments > VRIK page 2 row 5, R161: 0 OFF / 1 NATIVE HITS / 2 GAME TIMING, shipped 0 since R162 (GAME TIMING gave 0 chained follow-ups in VR); old true = 1, false = 0, missing = 0). GAME TIMING: with the practice weapon the mod does not shorten the native time-to-hit (`VrNativeHitTime`) and the motion attack clock runs at the native rate, decided once per swing at its start, F2 row `R161 TUTORIAL_TIMING on/off mode=...`; the direct route stays as with OFF. NATIVE HITS (the old R159, with it 5 of 6 chained follow-ups got no hit in the sparring): while you hold a
-practice / quest weapon (the wooden sword of the prologue sparring with Capon) every swing hits only through the game's own
-attack in its strike window, the mod's direct hit (late contact, VR intent hit) is off for that swing. the game's tutorial
-then sees the hits the way it expects them. a contact the native strike window doesn't reach in time is not a hit there, so
-swing like the game wants it - wait until the sword is back in guard. decided once per swing, a change in the middle of a
-swing doesn't drop or double it. real weapon in hand = nothing changes. F2 log: `R159 TUTORIAL_NATIVE on/off reason=...`.
-only the weapon is used to see a training fight; the arranged fight flag of the quest recorder (Shift+F5) is not read for this
+**Combo help** (R171, Experiments > VRIK page 2 rows 4-5 and NPCS page rows 3, 4, 8, the same switches as COMBAT FLOW > COMBO HELP):
+- `VrComboRecoveryHold` (default ON since R171) "Combo: wait for the next swing": after a hit that opens the game's combo slot, Henry's
+  attack waits at its end until you swing again (a manual block, the slot closing or the time ends it). in the 8 Nov 12:57 log both
+  presses that came inside the slot were eaten (`release=UNSEEN`), the attack was already over. `VrComboRecoveryHoldMs` "Combo: longest wait" 0.25-1.5 s.
+- `VrComboWindowExtend` "Combo: keep the slot open" + `VrComboWindowSeconds` "Combo: slot time" 0.5-3 s (the game's own slot is 0.5 s).
+- `VrComboZoneAssist` "Combo: next direction help".
 
-**Training fights: vanilla NPCs** (`VrTrainingVanillaNpcR163`, Experiments > VRIK page 2 row 4, R163, default ON). while you hold
-a practice / quest weapon (the same detector as above, now also with native controls) no mod feature writes to any NPC: npc
-defence speed (R146), force block, flinch, blade reaction zone (NR1 / stamina hits), lively npc + listening gestures (D73/D76),
-npc look at the headset, unarmed spacing, npc difficulty, counter stab, stagger rule, directional block and defence timing
-(C39), and the global npc cvars (H3 router windows, D70 dodge window, R52 shared rules). what a feature still holds on an npc is
-given back at once (force block cvar, cvar leases, npc life cleanup, flinch pose). your own VR (swing, announced attack, body,
-camera, input, kicks) stays. when the practice weapon is gone everything runs again (no latch). F2 log: `R163 TRAINING_VANILLA
-on held=... restored=...` / `off heldMs=...`; always (few rows): `R163 TRAINING_VANILLA ... held-off writes (all/tutor): ...`.
-OFF = all NPC features as before (a bisect switch: if the sparring scene still stops with it ON, the mod's NPC writes are not it).
+**FREE PLUS: turn limit** (R186, `VrFreePlusTurnLimitR186` default 90 deg, Experiments COMBAT page 2, live): FREE PLUS
+took every game turn out of the view, also the game's 180 deg turn toward an attacker behind you, so Henry faced away
+from you and his arms reached behind him (crossed). now the game's turn is taken out of the view only while Henry stays
+within this angle of where your head looks; the rest turns your view with him like the native game. turning your head
+toward him lets the hold work again; turns back toward you are always held. your own stick turns are never limited.
+0 = off (old), 60 / 75 / 90 / 110 / 135.
+
+**Chest under the view: back** (R183, `VrChestBackCmR183` shipped 10 cm since R190 (code default 4), Experiments VRIK+ page 1 row 1, live): the
+camera comes from the calibrated head anchor, the VR body hangs from the solved head target. that target now sits this
+far behind the view (horizontal, along the calibrated body forward), so chest, shoulders and belt hang back under the view
+and do not stick out when you look down or move. the view and the controller hands do not move. 0 = old (0..10 cm).
+R185 (bug fix, any setting): the trunk follows your reach - hands within 30 cm in front of your head = this setting
+back, hands 60 cm or more in front = 5 cm FORWARD (shoulders lead the arms like a real reach), smooth between.
+the row replaces "HUD event-only updates" (`VrHudWalkoffD70`, INI only now).
+
+**Weapon drawn with the hand** (R180, `VrWeaponLeadR180` default 1, Experiments OBJECTS page 3 row 6, live): the mod
+computes hand and weapon from one pose sample, but the game draws the skinned hand one pose cycle newer than the held
+weapon, so the handle trailed the fingers while you moved. the held sword / axe / mace / dagger is now drawn ahead
+along its own last-cycle motion by this many cycles (0 off, 0.5, 1, 1.5, 2; capped 10 cm / 30 deg). display only:
+contact and hits use the real weapon pose. R188: every held item (bow, crossbow, gun, shield, torch, knife), not only
+sword / axe / mace / dagger; the bow and crossbow aim and shot still use the real pose. R178 "Weapon turns in the fist" (`VrWeaponHandlePivotR178`) is retired.
+
+**Palm look** (R192, `VrPalmLookR192` default ON, VR HUD page tick, IMMERSION AND CONTROLS page 3, Experiments VIEW
+page 2 row 6, live): the open-palm glance (left palm = compass, right palm = health / stamina). it works only in the
+IMMERSIVE or MINIMAL HUD mode, never in NORMAL. before R192 the glance WAS the Immersive HUD switch (`VrContextualHud`),
+so ticking it turned a NORMAL HUD into IMMERSIVE. IMMERSIVE with palm look OFF = the full HUD (nothing to hide);
+MINIMAL with palm look OFF = compass / health never shown.
+
+**IMMERSION AND CONTROLS** (R192, player menu, no new keys except palm look): 4 pages. Body + movement: HMD based body
+rotation (OFF / 30 / 45 deg = `VrBodyFollowHmdR173` + `VrBodyFollowDegR173`), free targeting (FREE / FREE PLUS =
+`VrFreeTargetingModeR133`), hand smoothing (UNCAPPED 4 / CAPPED 2 = `VrMotionTrialD67`), body height, turning, walking,
+crouch, vignette. Controls + hands: controller scheme (`VrControllerLayoutR118`, also sets `VrPadGlyphStyle`: PS VR2 =
+PlayStation icons) and the old rows. "Button icons" and "Immersive HUD" / "Minimal HUD" rows are folded in.
+R193 Home (player): HUD, VR CONFIG, GRAPHICS, IMMERSION AND CONTROLS, COMBAT, then VRIK / NATIVE CONTROLS and
+RECALIBRATE VRIK; the left page has MONO / STEREO only. the HUD rows are only on the HUD menu now; COMBAT shows the
+Enemies page (enemy combat, fast block) until the Combat step.
+
+**Home > COMBAT** (R194, player menu): three tabs.
+ENEMIES: "Enemy difficulty" (`VrEnemyPresetR194`, also Experiments COMBAT "Free targeting +" page row 2): NORMAL = the
+beta (R139) starter values (VrNpcDifficulty 43, VrNpcDefenseSpeed 1.75, VrNpcBlockSpeed 1.0, VrNpcBlockAnimSpeed 1.4,
+VrDirectNpcBlockBySkill true with VrDirectNpcBlockSpeedLow 2 / High 3, VrDirectStaggerRule 1, VrDirectNpcBlock 0),
+HARDCORE = the R190 values (32, 1.7, 1.45, 1.55, by skill false, stagger rule 2, block rate 0), CUSTOM = keeps the
+values; plus "Fast block response". CUSTOM: block rate (VrDirectNpcBlock: by skill / often / always / perfect / off),
+difficulty slider 0..100 %, block speed BY SKILL on/off, low skill and high skill block speed sliders x1.0..x3.0 (turn BY
+SKILL on), all-enemies block speed x1.0..x3.0 (VrNpcDefenseSpeed, turns BY SKILL off); any change there = CUSTOM.
+SENSITIVITY opens the weapon sensitivity page (the old developer "WEAPON / FIST SENSITIVITY" page, with its STABS, FISTS,
+BLOCK and SHIELD BOX pages), now open to players; BACK returns to COMBAT.
+
+**Hands stay with the view when walking** (R191, `VrBodyLeadR191` default 1, Experiments VRIK page 2 row 8, live): the
+Shift+F2 log showed Henry's root moves one walking step between the pose and the weapon placement, and the skinned
+body is drawn on the newer root, while the camera eye and the held weapon used the older one. so walking forward the
+hands (and the chest) slid forward against the view, walking back they slid back, the weapon stayed on the controller.
+the eye and the drawn weapon now sit on the root predicted this many steps ahead (the last step x value; R193: position
+only, no turn lead, and the step smoothed over about three frames so a long frame does not spring the hands): -1, -0.5, OFF, 0.5, 1, 1.5, 2. pick the value where the hands stay still while walking. standing still changes
+nothing; a step over 25 cm or 20 deg (teleport, cut scene) is ignored. display only: hits, contact and aim unchanged.
+
+**Swing power: arm, not wrist** (R178, `VrSwingPowerArmR178` default ON, Experiments OBJECTS page 3 row 7): the hit
+energy came only from the struck point's speed, so a wrist flick hit as hard as an arm swing. now the wrist's speed
+against the struck point's speed scales it: 0.30 or more (arm swing, thrust) = full, 0.08 or less (pure flick) = 45 %
+of the energy, smooth between. the game's RPG / armour still decide the damage. the GEOM_IMPACT log line shows
+`arm=` and `hand/point=`. OFF = old.
+
+**Stone throw (crouched)** (R176, `VrStoneThrowR176` default ON, Experiments GEAR page row 2): the game's distraction throw is crouch
++ RB (aim), RB release (throw), A (cancel); no VR button sent RB in plain play. now: crouched (the game's crouch / distract action map is
+enabled), an EMPTY left hand raised to about head height (max 20 cm below the headset) + left Grip = RB held; let go = the throw. the
+knife pouch (hip / chest) and grabbing low stay as they are. the carried chest dagger display (`VrChestDagger`) is removed: its model had
+no texture and it never worked; its Lua and model are no longer in the companion pak.
+
+**Crossbow / gun: RT alone shoots** (R175, `VrRangedRtFireR175` default ON, Experiments NPCS page row 5): with a crossbow or a gun in
+hand a right trigger press sends the aim (LT) at once and the shot (RT) after 0.25 s; a short tap still fires at 0.25 s; the aim stays
+0.15 s after the shot. a press that starts while you hold LT yourself is the game's LT+RT as before. (R187: the R167 left trigger ->
+LB route for the look / Follow prompts is removed; X does them as before.)
+
+**Body follows headset (trial)** (R173, `VrBodyFollowHmdR173` shipped ON since R190, `VrBodyFollowDegR173` 15/30/45/60 deg (shipped 30 since R190, code default 45), Experiments VRIK+ page 1 rows 2 and 7):
+turn your head past the free look angle and Henry turns after it with the game's own stick turn, smooth (faster the further past),
+until he is back at the edge. the same yaw goes out of the view and the VR body frame (the R133 FREE PLUS hold), so the world and
+your hands stay. stick forward is then within the free look angle of where you look. paused in a locked fight (FREE PLUS holds
+that), while R133 gives an offset back, while you turn with the stick; not in menus, dialogue, cutscenes, activity views or on a
+horse. recenter / load = 0. if the first turn goes the wrong way it corrects itself within 3 deg (`flips`).
+Extra hand prediction (`VrHandLeadD67C` + `VrHandLeadMsD69`) is one row now: OFF / 3..33 ms.
+
+R171 removed: the tutorial modes (`VrTutorialNativeHitsR159`, `VrTrainingVanillaNpcR163`), lively NPC (`VrLivelyNpcD73`, `VrNpcListeningGesturesD76`)
+and the dialogue NPC look at the headset (`VrDialogueNpcLookHmd`). the keys are not read any more, NPCs look and move the game's way.
 
 ## room movement and dodge
 

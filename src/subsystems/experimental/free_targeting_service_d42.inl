@@ -5,6 +5,9 @@
     const bool selected=ft::enabled.load(std::memory_order_acquire);
     const bool current=selected&&frik_pose_probe::CombatFreeViewContextD42();
     ft::contextReady.store(current,std::memory_order_release);
+    // R173 body follows the headset: the same plain tracked gameplay test, whatever the free targeting mode
+    if(kcd2vr::body_follow_r173::enabled.load(std::memory_order_acquire)&&frik_pose_probe::CombatFreeViewContextD42())
+        kcd2vr::body_follow_r173::contextMs.store(std::uint64_t(GetTickCount64()),std::memory_order_release);
     // OFF retains the previous F4 preference. The opt-in mode extends the
     // same camera-only CVar lease to F4 OFF and yields protected scene owners.
     const bool want=((rung>0&&cameraOnly50)||selected)&&(!selected||current);

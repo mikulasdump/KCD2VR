@@ -22,7 +22,7 @@ def main():
    seq=newTrees[name].find('Root/Behavior/Sequence')
    assert ET.tostring(bt.find('Root/Behavior')[0])==ET.tostring(seq[0])
    assert seq[1].tag=='ExecuteLua'
-   assert seq[2].get('condition')=='$kcd2vrNoCameras and $preset==$enum:dialogPreset.fader'
+   assert seq[2].get('condition')=='$kcd2vrNoCameras & $preset==$enum:dialogPreset.fader'
  requests=list(caller.iter('RequestDialog'));assert requests
  assert any(n.get('UseTwins')=='$dialogParameters.useTwinsAsInitiator' for n in requests)
  binary=a.game/'Bin/Win64MasterMasterSteamPGO/WHGame.dll';digest=hashlib.sha256(binary.read_bytes()).hexdigest()

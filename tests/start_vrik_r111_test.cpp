@@ -14,11 +14,11 @@ int main(){
     // game start: main menu (world not ready) does nothing
     sr::Episode e{};std::uint64_t t=1000;
     CHECK(sr::decide(e,1,false,false,t,true,true,true,false,false)==Act::None);
-    // save load: loading -> nothing, then world up -> wait 1.5 s, then start VRIK
+    // save load: loading -> nothing, then world up -> wait 0.5 s (R181, was 1.5 s), then start VRIK
     CHECK(sr::decide(e,2,true,false,t,true,true,true,false,false)==Act::None);
     CHECK(sr::decide(e,2,false,true,t+=10,true,true,true,false,false)==Act::Wait);
-    CHECK(sr::decide(e,2,false,true,t+=1000,true,true,true,false,false)==Act::Wait);
-    CHECK(sr::decide(e,2,false,true,t+=600,true,true,true,false,false)==Act::StartVrik);
+    CHECK(sr::decide(e,2,false,true,t+=300,true,true,true,false,false)==Act::Wait);
+    CHECK(sr::decide(e,2,false,true,t+=200,true,true,true,false,false)==Act::StartVrik);
     // refused: retry only after 2 s (no latch)
     CHECK(sr::decide(e,2,false,true,t+=100,true,true,true,false,false)==Act::Wait);
     CHECK(sr::decide(e,2,false,true,t+=2000,true,true,true,false,false)==Act::StartVrik);
@@ -104,7 +104,7 @@ int main(){
         CHECK(!sr::steady(s,.05f,0,0,12.f,2200));                 // turned 10 deg
     }
     // menu rows
-    bool a=false,b=false;for(const auto& r:live_settings_d39::kBodyTrialsD76){a=a||r.id==live_settings_d39::Id::VrikOnStartR111;b=b||r.id==live_settings_d39::Id::StartHenryEyesR111;}
+    bool a=false,b=false;for(const auto& r:live_settings_d39::rows(live_settings_d39::pageOf(live_settings_d39::Id::StartHenryEyesR111))){a=a||r.id==live_settings_d39::Id::VrikOnStartR111;b=b||r.id==live_settings_d39::Id::StartHenryEyesR111;}
     CHECK(a&&b);
     live_settings_d39::Settings d{};CHECK(d.vrikOnStartR111&&d.startHenryEyesR111);
     CHECK(sr::vrikOnStart.load()&&sr::henryEyes.load());

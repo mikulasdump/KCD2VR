@@ -65,26 +65,26 @@ int main(){
         ck(sc::due(l,1500,true,.8)==sc::Due::Wait&&sc::due(l,1500,true,1.01)==sc::Due::Restore&&sc::due(l,5000,true,.1)==sc::Due::Restore,"0.8 m waits, 1 m restores, 4 s always");
         B::bigPropsR158.store(false);
     }
-    {   // 3. Experiments: OBJECTS page 3 row 1, default SMALL, never refused, page navigation 2 <-> 3
+    {   // 3. Experiments: R184 OBJECTS page 2 (Props) row 1, default SMALL, never refused, page navigation 1 <-> 2 <-> 3
         VrMenuState s{};ck(!s.live_d39.sceneryBigPropsR158,"default OFF");
-        ck(live::group(live::kObjectsPage3R158)==live::Group::Objects,"page 3 belongs to OBJECTS");
-        const auto& rows=live::rows(live::kObjectsPage3R158);
+        const unsigned props=live::pageOf(live::Id::SceneryBigPropsR158);
+        ck(live::group(props)==live::Group::Objects&&live::pageNumber(props)==2,"OBJECTS page 2");
+        const auto& rows=live::rows(props);
         ck(rows[0].id==live::Id::SceneryBigPropsR158&&!rows[0].readOnly&&!rows[0].session,"row 1 = the size switch, saved");
         ck(rows[1].id==live::Id::StaticGrabR89&&rows[2].id==live::Id::SceneryPropSwapR100&&rows[3].id==live::Id::PropFirmHoldR116,"held-prop switches together");
-        unsigned selected=live::kObjectsPage2D72;
-        ck(live::dispatch(selected,live::kMotionNextD69.l+2,live::kMotionNextD69.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&selected==live::kObjectsPage3R158,"OBJECTS 2 > 3");
+        unsigned selected=unsigned(live::Group::Objects);
+        ck(live::dispatch(selected,live::kMotionNextD69.l+2,live::kMotionNextD69.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&selected==props,"OBJECTS 1 > 2");
         const auto r=live::rowRect(0);
         ck(live::dispatch(selected,r.l+2,r.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&s.live_d39.sceneryBigPropsR158,"ON (never refused)");
         wchar_t text[200]{};live::label(s,rows[0],text,200);ck(std::wcsstr(text,L"UP TO 1 M")!=nullptr,"label UP TO 1 M");
         ck(live::dispatch(selected,r.l+2,r.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&!s.live_d39.sceneryBigPropsR158,"OFF again");
         live::label(s,rows[0],text,200);ck(std::wcsstr(text,L"SMALL")!=nullptr,"label SMALL");
         const auto r1=live::rowRect(1);const bool was=s.live_d39.staticGrabR89;
-        ck(live::dispatch(selected,r1.l+2,r1.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&s.live_d39.staticGrabR89!=was,"row 2 is the same Small props switch");
-        ck(live::dispatch(selected,live::kMotionNextD69.l+2,live::kMotionNextD69.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&selected==live::kObjectsPage3R158,"3 > stays 3");
-        ck(live::dispatch(selected,live::kMotionPrevD69.l+2,live::kMotionPrevD69.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&selected==live::kObjectsPage2D72,"OBJECTS 3 < 2");
-        ck(live::dispatch(selected,live::kMotionPrevD69.l+2,live::kMotionPrevD69.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&selected==unsigned(live::Group::Objects),"OBJECTS 2 < 1");
-        unsigned gear=live::kGearPage2R118;
-        ck(live::dispatch(gear,live::kMotionNextD69.l+2,live::kMotionNextD69.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&gear==live::kGearPage3R125,"GEAR 2 > 3 unchanged");
+        ck(live::dispatch(selected,r1.l+2,r1.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&s.live_d39.staticGrabR89!=was,"row 2 is the Small props switch");
+        ck(live::dispatch(selected,live::kMotionNextD69.l+2,live::kMotionNextD69.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&live::pageNumber(selected)==3,"2 > 3");
+        ck(live::dispatch(selected,live::kMotionNextD69.l+2,live::kMotionNextD69.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&live::pageNumber(selected)==3,"3 > stays 3");
+        ck(live::dispatch(selected,live::kMotionPrevD69.l+2,live::kMotionPrevD69.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&selected==props,"3 < 2");
+        ck(live::dispatch(selected,live::kMotionPrevD69.l+2,live::kMotionPrevD69.t+2,s,[](const VrMenuState&){return true;},[]{return true;})==live::Click::Changed&&selected==unsigned(live::Group::Objects),"2 < 1");
     }
     std::printf("scenery_big_props_r158_test: %u/%u passed\n",total-fail,total);
     return fail?1:0;

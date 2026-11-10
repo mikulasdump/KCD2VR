@@ -219,6 +219,8 @@ PhysicalAttachmentResult101 PhysicalAttachmentUpdate101(void* self,void* attachm
 bool PhysicalAttachmentPending6698() noexcept;
 bool PhysicalWeaponInputOwned6698() noexcept;
 bool PhysicalWeaponConsumesRightTrigger139() noexcept;
+bool HeldCrossbowOrGunR175() noexcept; // R175: crossbow / firearm in a hand (fresh equipment publication)
+bool StoneThrowPoseR176() noexcept; // R176: empty left hand raised to head height (stone throw)
 void ShutdownPhysicalWeapons6698() noexcept;
 
 struct TrackingPose {

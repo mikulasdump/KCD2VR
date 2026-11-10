@@ -33,10 +33,12 @@ static void publish(std::uintptr_t opp,bool recip,int skill,int phase){fb::oppon
 int main(){
  // chance by skill
  ck(fb::chance(0,false,10)==0.f,"mode 0 without BY SKILL = native, no roll");
- ck(fb::chance(0,true,0)==.25f&&fb::chance(0,true,-1)==.25f,"weak / unread enemy: 25 %");
+ ck(fb::chance(0,true,0)==.40f&&fb::chance(0,true,-1)==.40f,"weak / unread enemy: 40 % (R177)");
+ ck(fb::chance(4,true,30)==0.f&&fb::chance(4,false,0)==0.f,"R178 mode 4 OFF: never");
+ {fb::Machine m{};ck(m.step(true,4,true,7,true,30,4,0.f)==0&&m.rolls==0,"R178 OFF: no roll, no lease");}
  ck(fb::chance(0,true,30)==.75f&&fb::chance(0,true,40)==.75f,"strong enemy: 75 %");
- ck(fb::chance(0,true,15)>.49f&&fb::chance(0,true,15)<.51f,"skill 15: 50 %");
- ck(fb::chance(1,false,0)==.65f&&fb::chance(2,false,0)==1.f&&fb::chance(3,true,0)==1.f,"VrDirectNpcBlock 1/2/3 keep their C39 meaning");
+ ck(fb::chance(0,true,15)>.57f&&fb::chance(0,true,15)<.58f,"skill 15: 57.5 %");
+ ck(fb::chance(1,false,0)==.50f&&fb::chance(1,true,30)>.849f&&fb::chance(1,true,30)<.851f&&fb::chance(1,false,-1)==.50f&&fb::chance(2,false,0)==1.f&&fb::chance(3,true,0)==1.f,"VrDirectNpcBlock 1/2/3 keep their C39 meaning");
  ck(fb::forceValue(0)==1&&fb::forceValue(2)==1&&fb::forceValue(3)==2,"normal block, mode 3 perfect block");
  {int s[5]{3,-1,12,41,7};ck(fb::bestSkill(s)==12,"best melee skill ignores out-of-range");int u[5]{-1,-1,-1,-1,-1};ck(fb::bestSkill(u)==-1,"unread skills");}
  // machine: one roll per swing, held during the swing, re-rolled after it

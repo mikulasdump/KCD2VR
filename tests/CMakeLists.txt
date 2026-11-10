@@ -762,6 +762,45 @@ add_test(NAME training_vanilla_r163 COMMAND training_vanilla_r163_test)
 add_executable(counter_step_r160_test counter_step_r160_test.cpp) # R160 VrCombatNoStep counter-step (no forward lunge in Henry's own attacks)
 target_include_directories(counter_step_r160_test PRIVATE ../src)
 add_test(NAME counter_step_r160 COMMAND counter_step_r160_test)
+add_executable(melee_grip_depth_r168_test melee_grip_depth_r168_test.cpp) # R168 weapon in hand: depth + OBJECTS page 3 row 8
+target_include_directories(melee_grip_depth_r168_test PRIVATE ../src ../src/vrik)
+add_test(NAME melee_grip_depth_r168 COMMAND melee_grip_depth_r168_test)
+add_executable(body_follow_r173_test body_follow_r173_test.cpp) # R173 body follows the headset: free look edge, absorbed yaw, sign check
+target_include_directories(body_follow_r173_test PRIVATE ../src ../src/vrik)
+add_test(NAME body_follow_r173 COMMAND body_follow_r173_test)
+add_executable(ranged_rt_fire_r175_test ranged_rt_fire_r175_test.cpp) # R175 crossbow / gun: RT alone aims and shoots
+target_include_directories(ranged_rt_fire_r175_test PRIVATE ../src)
+add_test(NAME ranged_rt_fire_r175 COMMAND ranged_rt_fire_r175_test)
+add_executable(stone_throw_r176_test stone_throw_r176_test.cpp) # R176 crouched left grip = the game's stone throw (RB)
+target_include_directories(stone_throw_r176_test PRIVATE ../src)
+add_test(NAME stone_throw_r176 COMMAND stone_throw_r176_test)
+add_executable(weapon_feel_r178_test weapon_feel_r178_test.cpp) # R178 handle pivot + arm swing power
+target_include_directories(weapon_feel_r178_test PRIVATE ../src)
+add_test(NAME weapon_feel_r178 COMMAND weapon_feel_r178_test)
+add_executable(weapon_lead_r180_test weapon_lead_r180_test.cpp) # R180 weapon drawn ahead with the hand
+target_include_directories(weapon_lead_r180_test PRIVATE ../src)
+add_test(NAME weapon_lead_r180 COMMAND weapon_lead_r180_test)
+add_executable(chest_back_r183_test chest_back_r183_test.cpp) # R183 trunk behind the view
+target_include_directories(chest_back_r183_test PRIVATE ../src)
+add_test(NAME chest_back_r183 COMMAND chest_back_r183_test)
+add_executable(menu_layout_r184_test menu_layout_r184_test.cpp) # R184 Experiments tabs re-sorted
+target_include_directories(menu_layout_r184_test PRIVATE ../src)
+add_test(NAME menu_layout_r184 COMMAND menu_layout_r184_test)
+add_executable(enemy_preset_r194_test enemy_preset_r194_test.cpp) # R194 COMBAT enemy difficulty preset
+target_include_directories(enemy_preset_r194_test PRIVATE ../src ../src/vrik)
+add_test(NAME enemy_preset_r194 COMMAND enemy_preset_r194_test)
+add_executable(release_menu_r192_test release_menu_r192_test.cpp) # R192 IMMERSION AND CONTROLS rows
+target_include_directories(release_menu_r192_test PRIVATE ../src ../src/vrik)
+add_test(NAME release_menu_r192 COMMAND release_menu_r192_test)
+add_executable(root_lead_r191_test root_lead_r191_test.cpp) # R191 eye + drawn weapon on the predicted root
+target_include_directories(root_lead_r191_test PRIVATE ../src ../src/vrik)
+add_test(NAME root_lead_r191 COMMAND root_lead_r191_test)
+add_executable(stab_contact_r189_test stab_contact_r189_test.cpp) # R189 stab contact identity
+target_include_directories(stab_contact_r189_test PRIVATE ../src)
+add_test(NAME stab_contact_r189 COMMAND stab_contact_r189_test)
+add_executable(lt_prompt_lb_r167_test lt_prompt_lb_r167_test.cpp) # R167 left trigger -> LB at the look / Follow prompts
+target_include_directories(lt_prompt_lb_r167_test PRIVATE ../src)
+add_test(NAME lt_prompt_lb_r167 COMMAND lt_prompt_lb_r167_test)
 # R154: R148 / R149 / R152 host tests were only run by hand, now registered (same sources, no change)
 add_executable(start_facing_r148_test start_facing_r148_test.cpp) # R148 SteamVR start/load facing + Theater screen re-place
 target_include_directories(start_facing_r148_test PRIVATE ../src ../src/vrik)

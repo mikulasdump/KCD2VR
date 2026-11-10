@@ -67,7 +67,7 @@
 #elif KCD2VR_M2_HOST_SLOT == 155
 // src/mod.cpp: loadconfig_02.inl
 // M2_SLOT_BEGIN 155
-    g_npc_block39.store(std::clamp(ReadIniIntExplicit(explicit_ini,"Settings","VrDirectNpcBlock",0),0,3)); // C39
+    g_npc_block39.store(std::clamp(ReadIniIntExplicit(explicit_ini,"Settings","VrDirectNpcBlock",0),0,4)); // C39 (R178: 4 = OFF)
     {const float v=ReadIniFloatExplicit(explicit_ini,"Settings","VrNpcDifficulty",43.f); // R124: default 43 (Miki's INI)
      npc_difficulty::difficulty.store(std::isfinite(v)?std::clamp(v,0.f,100.f)*.01f:0.f);}
     {const int version=ReadIniIntExplicit(explicit_ini,"Settings","VrNpcDefenseSpeedVersion",0);
@@ -193,7 +193,7 @@
 #elif KCD2VR_M2_HOST_SLOT == 285
 // src/vr_menu.h: menu_state_04.inl
 // M2_SLOT_BEGIN 285
-    int   npc_block39 = 0;                  // C39 VrDirectNpcBlock: 0 native, 1 often, 2 always, 3 always perfect
+    int   npc_block39 = 0;                  // C39 VrDirectNpcBlock: 0 by skill, 1 often, 2 always, 3 always perfect, 4 OFF (R178)
     float exp_npc_proximity_radius36 = 0.40f; // NPC reference radius, meters; observation until defense boundary is proven
     float exp_npc_eta_strike = 0.12f;       // VrNpcBlockEtaStrike
     bool  exp_direct_block_timing39 = true; // C39 VrDirectNpcBlockBySkill: VR DIRECT announces a skill-shortened contact ETA to a waiting opponent

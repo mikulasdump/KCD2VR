@@ -56,7 +56,7 @@
         DrawButton(dc,font_small_,kExpTelegraphStrike,s.exp_telegraph_strike?L"[X] ANNOUNCE ATTACK EARLY":L"[ ] ANNOUNCE ATTACK EARLY",s.exp_telegraph_strike?kAccent:kPanel2);
         DrawButton(dc,font_small_,kExpWindupHold,s.exp_windup_hold?L"[X] HYBRID: HOLD TO PREPARE":L"[ ] HYBRID: HOLD TO PREPARE",s.exp_windup_hold?kAccent:kPanel2);
         DrawButton(dc,font_small_,kExpGuardCounter,s.exp_guard_counter_motion?L"[X] PARRY INPUT: COUNTER-MOTION":L"[ ] PARRY INPUT: WINDOW ASSIST",s.exp_guard_counter_motion?kAccent:kPanel2); // R59.16C10R17: all F4 modes
-        DrawButton(dc,font_small_,kExpContextualHud,s.contextual_hud?L"[X] PALM HUD":L"[ ] PALM HUD",s.contextual_hud?kAccent:kPanel2);
+        DrawButton(dc,font_small_,kExpContextualHud,s.contextual_hud?L"[X] IMMERSIVE HUD":L"[ ] IMMERSIVE HUD",s.contextual_hud?kAccent:kPanel2);
         DrawButton(dc,font_small_,kExpBaseline35,L"COMBAT BASELINE",RGB(176,148,98));
         std::swprintf(v,128,s.exp_guard_enter_speed<=0.f?L"off":L"%.1f m/s",double(s.exp_guard_enter_speed)); DrawSlider(dc,font_small_,kExpGuardEnterSpeed,L"Guard ENTER: blade must be slower than",s.exp_guard_enter_speed/5.f,v);
         std::swprintf(v,128,L"%d ms",s.exp_guard_enter_dwell_ms); DrawSlider(dc,font_small_,kExpGuardEnterDwell,L"Guard ENTER: hold the posture this long first",s.exp_guard_enter_dwell_ms/600.f,v);

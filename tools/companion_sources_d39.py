@@ -6,12 +6,9 @@ mapping so a new source edit cannot be silently omitted from a release.
 SOURCE_PAIRS = {
     'companion/source/Scripts/Startup/zzkcd2vr_chat_target_d78.lua': 'Scripts/Startup/zzkcd2vr_chat_target_d78.lua',
     'companion/source/zzkcd2vr_corpse_d72.lua': 'Scripts/Startup/zzkcd2vr_corpse_d72.lua',
-    'companion/source/Scripts/Startup/zzkcd2vr_life_d73.lua': 'Scripts/Startup/zzkcd2vr_life_d73.lua',
     'companion/source/Scripts/Startup/zzkcd2vr_alchemy_sound_d80.lua': 'Scripts/Startup/zzkcd2vr_alchemy_sound_d80.lua',
     'companion/source/Scripts/Startup/zzkcd2vr_swing_whoosh_r116.lua': 'Scripts/Startup/zzkcd2vr_swing_whoosh_r116.lua', # R116 swing whoosh
     'companion/source/Scripts/Startup/zzkcd2vr_quest_diag_r158.lua': 'Scripts/Startup/zzkcd2vr_quest_diag_r158.lua', # R158 Shift+F5 quest recorder (read-only)
-    'companion/source/AI/npc/basic/switch/switch.xml': 'AI/npc/basic/switch/switch.xml',
-    'companion/source/AI/npc/basic/switch/kcd2vrlifelookd73.xml': 'AI/npc/basic/switch/kcd2vrlifelookd73.xml',
 
 
     'companion/source/Libs/Tables/combat/combat_action_attack.xml': 'Libs/Tables/combat/combat_action_attack.xml', # D72 dedicated native SPECIAL kick rows
@@ -63,20 +60,19 @@ SOURCE_PAIRS = {
     'src/subsystems/throw_drop/resources/startup_reservation_t22.lua': 'Scripts/KCD2VR/native_supply_t2.lua',
     'src/subsystems/throw_drop/resources/inventory_delivery_t26.lua': 'Scripts/Startup/zzkcd2vr_throwing_assets1.lua',
     'companion/Mods/kcd2vr_lab/Scripts/Startup/zzkcd2vr_lab.lua': 'Scripts/Startup/zzkcd2vr_lab.lua',
-    'companion/source/AI/npc/basic/switch/runDialog.xml': 'AI/npc/basic/switch/runDialog.xml',
-    'companion/source/Scripts/Startup/zzkcd2vr_chest_sheath_d33.lua': 'Scripts/Startup/zzkcd2vr_chest_sheath_d33.lua',
+    # R169: MBT conditions use & (retail never uses 'and'); replaces the donor copy.
+    'companion/source/AI/speech/getparametersfrompreset.xml': 'AI/speech/getparametersfrompreset.xml',
 }
 # Other mandatory members must already exist in the verified donor; a typo is
 # not permission to create a second script under a similar path.
+# R170: lively NPC members (life Lua, switch include, life look, runDialog) removed;
+# with them in the pak the Capon sparring chat never started (tested without the DLL).
 ALLOWED_ADDITIONS = frozenset({
     'Scripts/Startup/zzkcd2vr_chat_target_d78.lua',
     'Scripts/Startup/zzkcd2vr_corpse_d72.lua',
-    'Scripts/Startup/zzkcd2vr_life_d73.lua',
     'Scripts/Startup/zzkcd2vr_alchemy_sound_d80.lua',
     'Scripts/Startup/zzkcd2vr_swing_whoosh_r116.lua',
     'Scripts/Startup/zzkcd2vr_quest_diag_r158.lua',
-    'AI/npc/basic/switch/switch.xml',
-    'AI/npc/basic/switch/kcd2vrlifelookd73.xml',
 
     'Animations/Mannequin/ADB/kcd_male_combat_database.adb',
     'Libs/UI/Menu.gfx',
@@ -105,8 +101,6 @@ ALLOWED_ADDITIONS = frozenset({
     'Scripts/Startup/zzkcd2vr_alchemy_name_d72.lua',
     'Scripts/KCD2VR/map_letter_d44.lua',
     'Scripts/Entities/Items/PickableItem.lua',
-    'AI/npc/basic/switch/runDialog.xml',
-    'Scripts/Startup/zzkcd2vr_chest_sheath_d33.lua',
 })
 
 # D74 optional adult mod: never inserted into the main companion.

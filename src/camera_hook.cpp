@@ -30,6 +30,7 @@
 #include "vrik/visual_selection59c7f.h"
 #include "subsystems/experimental/free_targeting_d42.h" // R133 FREE PLUS view hold
 #include "vrik/riding_vrik_d76.h" // R133: never hold on a horse (the horse turns with the left stick)
+#include "vrik/body_follow_r173.h" // R173: body follows the headset (yaw past the free look, absorbed like R133)
 
 #include <DetourModKit/scan.hpp>
 #include <DetourModKit/hook.hpp>
@@ -1417,6 +1418,7 @@ bool CameraHook::ApplyCurrentPoseToPublishedCamera(void* camera, std::uint64_t* 
                 const auto rootTick=r133::rootYawTick.load(std::memory_order_acquire);
                 in.haveRoot=rootTick&&nowR133>=rootTick&&nowR133-rootTick<=100;
                 in.rootYaw=r133::rootYaw.load(std::memory_order_relaxed);
+                in.headValid=hmd_local_angles_valid;in.headYaw=hmd_local_yaw; // R186 turn limit
                 const auto clearsBefore=holdR133.clears;
                 const auto stepR133=r133::step(holdR133,in);
                 if(in.modePlus&&!in.reset&&in.context)r133::holdReadyMs.store(nowR133,std::memory_order_release); // R153: own turns are shown
@@ -1433,7 +1435,53 @@ bool CameraHook::ApplyCurrentPoseToPublishedCamera(void* camera, std::uint64_t* 
                 r133::bleedSign.store(stepR133==r133::Step::Bleed?holdR133.bleedSign:0,std::memory_order_release);
                 busyR133.store(false,std::memory_order_release);
             }
-            const double phiR133=hmd_final_orientation_authority&&!dialogueEye59c10r2&&!activityEye59c19?double(r133::offsetView.load(std::memory_order_acquire)):0.; // atomic: culling applies can run on another thread
+            // R173 body follows the headset (body_follow_r173.h): same callers as the R133 hold, one at a time; a skipped
+            // call loses nothing (the next one takes the whole camera delta). the yaw taken out goes into the view below
+            // and, through bf::applied, into the VR body frame (frik_pose_probe CalFrameR133, weapon_tracking).
+            {   namespace bf=kcd2vr::body_follow_r173;
+                static bf::State followR173{};static std::uint64_t genR173=0,epochR173=0;static std::atomic<bool> busyR173{false};
+                const bool onR173=bf::enabled.load(std::memory_order_acquire);
+                if((onR173||followR173.f!=0||followR173.haveCamera)&&!busyR173.exchange(true,std::memory_order_acquire)){
+                    const auto nowR173=std::uint64_t(GetTickCount64());
+                    const auto genNow=s_rotation_filter_generation.load(std::memory_order_acquire);const auto epochNow=frik_pose_probe::PoseEpochH24();
+                    const bool rider=kcd2vr::riding_vrik_d76::RiderRecentR98(nowR173);
+                    bf::Input fin{};fin.on=onR173;fin.now=nowR173;
+                    fin.reset=(genR173&&genNow!=genR173)||(epochR173&&epochNow!=epochR173); // recenter / load / pose epoch
+                    genR173=genNow;epochR173=epochNow;
+                    fin.applyView=hmd_final_orientation_authority&&!dialogueEye59c10r2&&!activityEye59c19&&!rider;
+                    fin.context=fin.applyView&&trackedBase48&&bf::contextFresh(nowR173);
+                    fin.pause=r133::engaged(nowR173)||r133::ownsTurn(nowR173)||std::fabs(r133::offsetView.load(std::memory_order_acquire))>r133::kDoneRad||
+                        r133::bleedSign.load(std::memory_order_acquire)!=0;
+                    fin.userTurn=r133::userTurning(nowR173);
+                    const float bflR173=std::sqrt(base_forward.x*base_forward.x+base_forward.y*base_forward.y);
+                    fin.cameraYaw=bflR173>1e-4f?r133::yawOf(base_forward.x,base_forward.y):followR173.lastCamera;
+                    fin.headValid=hmd_local_angles_valid&&bflR173>1e-4f;fin.headYaw=hmd_local_yaw;
+                    {const auto rootTick=r133::rootYawTick.load(std::memory_order_acquire);
+                     fin.haveRoot=rootTick&&nowR173>=rootTick&&nowR173-rootTick<=100;fin.rootYaw=r133::rootYaw.load(std::memory_order_relaxed);}
+                    fin.freeLookRad=double(bf::clampDeg(bf::freeLookDeg.load(std::memory_order_acquire)))*bf::kPi/180.;
+                    const auto outR173=bf::step(followR173,fin);
+                    bf::applied.store(float(outR173.applied),std::memory_order_release);bf::appliedBody.store(float(outR173.appliedBody),std::memory_order_release);
+                    bf::rx.store(outR173.rx,std::memory_order_release);if(outR173.rx!=0.f)bf::rxMs.store(nowR173,std::memory_order_release);
+                    bf::turnedDeg.store(float(followR173.turnedDeg),std::memory_order_relaxed);bf::relativeDeg.store(float(outR173.relative*180./bf::kPi),std::memory_order_relaxed);
+                    bf::flips.store(followR173.flips,std::memory_order_relaxed);bf::resets.store(followR173.resets,std::memory_order_relaxed);
+                    bf::driveFrames.store(followR173.driveFrames,std::memory_order_relaxed);
+                    busyR173.store(false,std::memory_order_release);
+                }
+            }
+            const double phiR133=(hmd_final_orientation_authority&&!dialogueEye59c10r2&&!activityEye59c19?double(r133::offsetView.load(std::memory_order_acquire)):0.)+
+                double(kcd2vr::body_follow_r173::applied.load(std::memory_order_acquire)); // atomic: culling applies can run on another thread. R173: 0 outside its applyView
+            {   // R174: ONE body frame yaw for head, hands and weapon = the view hold + the root's turn against the camera since
+                // the hold began (body_follow_r173.h bodyYaw). hands stay where the view says, also while the root lags the camera.
+                namespace bf=kcd2vr::body_follow_r173;static bf::BodyRef refR174{};static std::atomic<bool> busyR174{false};
+                if(!busyR174.exchange(true,std::memory_order_acquire)){
+                    const auto nowR174=std::uint64_t(GetTickCount64());const auto rootTick=r133::rootYawTick.load(std::memory_order_acquire);
+                    const float bflR174=std::sqrt(base_forward.x*base_forward.x+base_forward.y*base_forward.y);
+                    const bool haveRel=rootTick&&nowR174>=rootTick&&nowR174-rootTick<=100&&bflR174>1e-4f;
+                    const double rel=haveRel?r133::wrap(r133::yawOf(base_forward.x,base_forward.y)-double(r133::rootYaw.load(std::memory_order_relaxed))):0.;
+                    bf::bodyTotal.store(float(bf::bodyYaw(refR174,phiR133,rel,haveRel)),std::memory_order_release);
+                    busyR174.store(false,std::memory_order_release);
+                }
+            }
             if(std::fabs(phiR133)>1e-6){
                 const float c=float(std::cos(phiR133)),s=float(std::sin(phiR133));
                 for(auto& v:visual_basis){const float x=v.x,y=v.y;v.x=c*x-s*y;v.y=s*x+c*y;}

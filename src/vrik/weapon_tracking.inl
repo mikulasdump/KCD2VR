@@ -117,7 +117,7 @@ static void PublishWeaponTracking6694(void* character,void* skeleton,void* pose,
             nh=FromT(head);th=Sub(ts.head,{roomOriginD76.consumedTracking.x,roomOriginD76.consumedTracking.y,roomOriginD76.consumedTracking.z});originChar=character;originEpoch=e;
         }frame=fq;baseHead=nh;trackingHead=th;
         {float q[4]{frame.x,frame.y,frame.z,frame.w}; // R133 FREE PLUS body offset (as the calibrated frame helper)
-         kcd2vr::free_targeting_r133::yawFrame(q,kcd2vr::free_targeting_r133::offsetBody.load(std::memory_order_acquire));frame={q[0],q[1],q[2],q[3]};}
+         kcd2vr::free_targeting_r133::yawFrame(q,double(kcd2vr::body_follow_r173::bodyTotal.load(std::memory_order_acquire)));frame={q[0],q[1],q[2],q[3]};} // R174: the one view-following body yaw
     }
     if(kcd2vr::roomscale_d76::recenterPending.load(std::memory_order_acquire)||
        (g_cal_state.load()==2&&roomOriginD76.owner.epoch&&roomOriginD76.owner.epoch!=g_cal_room_origin_d76.load(std::memory_order_acquire)))return;

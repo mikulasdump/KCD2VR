@@ -7,8 +7,10 @@ Full 6DoF head tracking, VRIK body, a reworked physical combat system, hand hand
 
 Note: this is a beta, made by one passion-driven hobby developer in his free time over the last ~12 months, very slowly at first, the last 3 months a lot faster with the help of (expensive) AI. Don't expect perfection, I am shoehorning gestures and VRIK into an animation based game with a lot of buttons and a complex combat system. It's genuinely playable, but it's a very long game and i can't test every quest. There are some quest bugs I encountered (tutorial fight) - so maybe load a save after it... don't know about Tomcat Masterstrike test yet.
 
-Update: VRIK update (more smooth if you have like 85-90 fps, capped openxr fresh pose helped a little). FSR update (better), DLSS too (less black frames). HUD repair for everybody.  Enemies now blocking and evading a lot more. Combos are still finnicky. 
-SteamVR orientation fixed. Could not get more performance out of it yet. use my user.cfg if you want. -devmode is not necessary anymore. 
+Update: VRIK update (more smooth if you have like 85-90 fps, capped openxr fresh pose helped a little - it caps your framerate to your HMD - ideally 90-120 fps). FSR update (better), DLSS too (less black frames). HUD repair for everybody (better visible).  Enemies now blocking and evading a lot more according to their skill - so you can't kill skilled enemies easy but need to use blocks and counters (attacking them when they attack with force)/ripostes or masterstrikes (restricted to stabs). Combos are still finnicky. 
+SteamVR orientation fixed. Could not get more performance out of it yet. use my user.cfg if you want for some optimizations. -devmode is not necessary anymore. Added rock throwing (when you crouch, hold grip in front of your face and release - rock comes from the right pointing where you look - I did not bother to have "handtracked" throwing - too much work for something you don't use that often). "look there" or follow is on X button now, because LB was reserved for grip. 
+The quests progression was fixed (it was AI dialogue problem) - all quests are working now. 
+I added HMD turn -  so the Henry follows where you look (on is 30° or off is after 45° deviation). Freetargeting is also there (normal) and freetargeting enhanced - but it is not ideal (the game forces the paired animation, so NPC can suddenly jump in front of you to make their combo). 
 
 ## Features
 

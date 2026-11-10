@@ -91,8 +91,22 @@ struct Input {
     bool reset=false;         // recenter / load / pose epoch change
     bool haveRoot=false;
     double cameraYaw=0,rootYaw=0;
+    bool headValid=false;double headYaw=0; // R186: recentered HMD yaw (camera_hook hmd_local_yaw, Cry yaw, + = left)
     std::uint64_t now=0;
 };
+// R186 turn limit (Miki 10 Nov: "during the fights, if I am attacked from behind in free mode + the body turns around,
+// when I turn there my arms are crossed ... we need some restraints for turn around - that Henry's body does not turn
+// where I don't want"). FREE PLUS took EVERY game turn out of the view, also the game's 180 deg turn toward an attacker
+// behind you: Henry then faced away from where you (and your hands) are, the arms reached behind him and crossed. now
+// the game's turn is absorbed only while Henry stays within the limit of where your head looks (head yaw + view offset);
+// the part of a game turn past the limit is shown (the view turns with Henry, as in the native game), so Henry never
+// faces more than the limit away from you. your own stick turns (R153) are never limited. 0 = off (old).
+inline constexpr const char* kTurnLimitKey="VrFreePlusTurnLimitR186";
+inline std::atomic<float> turnLimitDeg{90.f};
+inline float clampLimit(float d) noexcept {return std::isfinite(d)?std::clamp(d,0.f,180.f):90.f;}
+// before: Henry's facing relative to your head now (rad), dc: the game's camera turn this frame. returns how much of dc
+// may be absorbed (taken out of the view) so the relative stays within lim (or does not grow past it).
+inline double limitedAbsorb(double before,double dc,double lim) noexcept;
 enum class Step : unsigned {Off,Pass,Absorb,Bleed,Cleared};
 constexpr double kJumpRad=.35;          // > 20 deg in one frame = teleport/scripted, never absorbed
 constexpr double kDoneRad=.0175;        // 1 deg: offset is gone
@@ -126,6 +140,16 @@ inline Step step(Hold& h,const Input& in) noexcept {
         h.bleedSince=0;
         if(in.turnOnly)return Step::Pass; // mode 1: the game's turns stay in the view as before
         if((in.userTurn&&!in.ownTurn)||jump)return Step::Pass; // an own turn is in userYaw, the camera delta is the game's
+        { // R186: the game's turn is absorbed only up to the turn limit from your head; the rest is shown
+            const double lim=double(clampLimit(turnLimitDeg.load(std::memory_order_relaxed)))*.017453292519943295;
+            if(lim>0&&in.headValid&&std::isfinite(in.headYaw)&&dc!=0){
+                const double a=limitedAbsorb(wrap(h.view+in.headYaw),dc,lim);
+                const double k=a/dc;h.view=wrap(h.view-a);h.body=wrap(h.body-dr*k);
+                h.absorbedDeg+=std::fabs(a)*57.29577951308232;
+                h.maxOffsetDeg=std::max(h.maxOffsetDeg,std::fabs(h.view)*57.29577951308232);
+                return Step::Absorb;
+            }
+        }
         h.view=wrap(h.view-dc);h.body=wrap(h.body-dr);
         h.absorbedDeg+=std::fabs(dc)*57.29577951308232;
         h.maxOffsetDeg=std::max(h.maxOffsetDeg,std::fabs(h.view)*57.29577951308232);
@@ -142,6 +166,14 @@ inline Step step(Hold& h,const Input& in) noexcept {
     // done when the VIEW offset is gone; a body rest (camera and root turned a little apart) goes with it
     if(std::fabs(h.view)<=kDoneRad){clear(h);return Step::Pass;}
     return Step::Bleed;
+}
+inline double limitedAbsorb(double before,double dc,double lim) noexcept {
+    const double after=wrap(before-dc);
+    if(std::fabs(after)<=lim)return dc;                         // stays within: all of it
+    if(std::fabs(after)<std::fabs(before))return dc;           // coming back toward you: all of it
+    if(std::fabs(before)>=lim)return 0;                        // already at the limit and growing: none (the view turns)
+    const double edge=after>0?lim:-lim;                        // fill up to the edge, the rest is shown
+    return wrap(before-edge);
 }
 // right stick X the pad sends while bleeding (rx<0 = turn left = yaw up in Cry). 0 when not bleeding.
 inline float bleedRx(double view,int sign) noexcept {

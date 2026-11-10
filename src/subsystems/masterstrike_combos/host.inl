@@ -142,7 +142,7 @@
 // M2_SLOT_BEGIN 302
     bool  exp_combo_window_extend = true; // VrComboWindowExtend: qualified Henry timer extension
     int   exp_combo_window_ms = 1500;       // VrComboWindowMs (0 = native combos only)
-    bool  exp_combo_recovery_hold = false;   // I12/N2 VrComboRecoveryHold: keep the attack tail alive while the slot is open
+    bool  exp_combo_recovery_hold = true;    // I12/N2 VrComboRecoveryHold: keep the attack tail alive while the slot is open
     bool  exp_combo_zone_assist = true;      // I12 VrComboZoneAssist: in an open native slot, announce the next recipe zone
     bool  exp_combo_test_force = false;     // DS-F6 VrComboTestForce: TEST - hold the combo slot 5 s + C69 receipts (game still decides)
 // M2_SLOT_END 302

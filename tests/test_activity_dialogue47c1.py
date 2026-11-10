@@ -13,7 +13,7 @@ class ActivityDialogue(unittest.TestCase):
   self.assertEqual(ET.tostring(seq[0]),ET.tostring(old.find('BehaviorTree/Root/Behavior')[0]))
   self.assertEqual(ET.tostring(new[1]),ET.tostring(old[1]))
   self.assertEqual(seq[1].get('code'),"data.kcd2vrNoCameras = (System.GetCVar('wh_dlg_NoCameras') == 1)")
-  self.assertEqual(seq[2].get('condition'),'$kcd2vrNoCameras and $preset==$enum:dialogPreset.fader')
+  self.assertEqual(seq[2].get('condition'),'$kcd2vrNoCameras & $preset==$enum:dialogPreset.fader')
   changes=seq[2][0].get('expressions').splitlines()
   self.assertEqual(changes,['$dialogParameters.useTwinsAsInitiator = false','$dialogParameters.movePlayer = false','$dialogParameters.rotatePlayer = false'])
  def test_pack_preserves_existing_activity_assets(self):

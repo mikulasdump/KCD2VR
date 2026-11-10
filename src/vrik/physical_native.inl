@@ -627,7 +627,11 @@ static void PhysCaptureGrip6698(const PhysEquipmentItem6698& item,const float* n
     if(item.held&&primaryReferenceB4&&ph::finite(*primaryReferenceB4)&&kcd2vr::melee_grip_r123::enabled.load(std::memory_order_relaxed)&&
        kcd2vr::melee_grip_r123::eligible(item.profile.classId,item.profile.melee(),item.profile.shield176())&&
        item.profile.side>=0&&item.profile.side<2){
-        const int ps=item.profile.side;const auto& ref=*primaryReferenceB4;
+        const int ps=item.profile.side;auto ref=*primaryReferenceB4;
+        {   // R168 "Weapon in hand: depth" (melee_grip_r123.h): move the weapon inside the hand, live
+            const float depthR168=kcd2vr::melee_grip_r123::depthCm.load(std::memory_order_relaxed);
+            if(depthR168!=0.f){const double k=kcd2vr::melee_grip_r123::depthScale(pm::length(ref.p),depthR168);ref.p.x*=k;ref.p.y*=k;ref.p.z*=k;}
+        }
         const double oldCm=pm::length(g.hand[ps].p-ref.p)*100,oldDeg=pm::angle(g.hand[ps].q,ref.q)*57.29577951308232;
         if(!g.ready[ps]||oldCm>.01||oldDeg>.05){
             char m[256]{};std::snprintf(m,sizeof(m),"R123 MELEE_GRIP key=%016llX class=%d side=%d result=%s previousCm=%.1f previousDeg=%.1f local=(%.3f,%.3f,%.3f)",
@@ -1075,12 +1079,39 @@ static PhysicalAttachmentResult101 PhysAttachmentResultImpl101(void* self,void* 
         if(existing&&PhysReplayLast135(*existing,now,authorityReason))return R::Placed;
         if(pending){++g_phys_grace_expired135;PhysAuthorityDrop157(authorityReason);restore(authorityReason);return R::Restored;}return R::Waiting;
     }
-    const auto localTarget=(frame.output.displayLatched[side]||frame.output.displayRejoinR13[side])?frame.output.displayWeapons[side]:frame.output.weapons[side]; // V66.178R19: the placement writer shows the display packet (pinned); physics/native keep weapons[]
+    auto localTarget=(frame.output.displayLatched[side]||frame.output.displayRejoinR13[side])?frame.output.displayWeapons[side]:frame.output.weapons[side]; // V66.178R19: the placement writer shows the display packet (pinned); physics/native keep weapons[]
     ModelWorld6692 current164{};
     // The captured socket proves Henry's character identity, not its old world transform.
     const auto character164=frame.correlation126[side].stamp.actor;
     if(!PhysAttachmentWorld164(attachment,character164,current164)){if(pending){PhysAuthorityDrop157(10);restore(10);return R::Restored;}return R::Waiting;}
-    const auto target=PhysCurrentWorld164(localTarget,current164);
+    {   // R180 (weapon_lead_r180.h): the held melee weapon is drawn ahead along its last cycle's motion, so it is not one
+        // cycle behind the skinned hand (the handle slid against the fingers). display only: frame.output.weapons (contact,
+        // hits) is untouched. not while an impale pins the display (R188: all held items, see below).
+        static kcd2vr::weapon_lead_r180::State leadR180[2]{};
+        // R188 (Miki 10 Nov: "the same thing for BOW or other weapons ... all weapons do not flow in hand but move in sync"):
+        // every held item now (bow, crossbow, gun, shield, torch, knife), not only melee. the bow / crossbow aim and the
+        // shot use frame.output.weapons (the physical pose), never this displayed one, so aiming is unchanged.
+        const bool leadOkR180=!frame.output.displayLatched[side]; // R189: also in the R13 display rejoin (bow / torch sit there while their sweep catches up)
+        if(leadOkR180)kcd2vr::weapon_lead_r180::lead(leadR180[side],kcd2vr::weapon_lead_r180::cycles.load(std::memory_order_relaxed),
+            item.profile.key^(item.profile.generation<<1),frame.input.sample,frame.input.timeNs,frame.input.tick,localTarget.q,localTarget.p); // R182: smoothed speed
+        else leadR180[side]=kcd2vr::weapon_lead_r180::State{};
+    }
+    ModelWorld6692 drawn191=current164;
+    {   // R191 (root_lead_r191.h): the weapon is drawn on the same predicted root as the camera eye and the skinned body.
+        // frame.world is the root the pose was made with, current164 the root now: their step x VrBodyLeadR191.
+        namespace rl=kcd2vr::root_lead_r191;namespace pc=kcd2vr::pose_core;
+        static rl::State leadStateR193; // R193: smoothed step, one for both hands (locked)
+        const auto leadR191=rl::make(leadStateR193,frame.input.sample,pc::Quat{frame.world[0],frame.world[1],frame.world[2],frame.world[3]},pc::Vec3{frame.world[4],frame.world[5],frame.world[6]},
+            pc::Quat{current164.q.x,current164.q.y,current164.q.z,current164.q.w},pc::Vec3{current164.t.x,current164.t.y,current164.t.z},
+            rl::cycles.load(std::memory_order_relaxed));
+        if(leadR191.on&&std::fabs(frame.world[7]-current164.scale)<1e-4f){
+            const auto t=leadR191.root+leadR191.step;const auto q=rl::orient(leadR191,pc::Quat{current164.q.x,current164.q.y,current164.q.z,current164.q.w});
+            if(pc::finite(t)&&std::isfinite(q.x)&&std::isfinite(q.y)&&std::isfinite(q.z)&&std::isfinite(q.w)){
+                drawn191.t.x=decltype(drawn191.t.x)(t.x);drawn191.t.y=decltype(drawn191.t.y)(t.y);drawn191.t.z=decltype(drawn191.t.z)(t.z);
+                drawn191.q.x=decltype(drawn191.q.x)(q.x);drawn191.q.y=decltype(drawn191.q.y)(q.y);drawn191.q.z=decltype(drawn191.q.z)(q.z);drawn191.q.w=decltype(drawn191.q.w)(q.w);}
+        }
+    }
+    const auto target=PhysCurrentWorld164(localTarget,drawn191);
     float wanted[8]{float(target.q.x),float(target.q.y),float(target.q.z),float(target.q.w),float(target.p.x),float(target.p.y),float(target.p.z),natural[7]};bool child=false,checked=false;
     auto& record=g_phys_placement6698[side];
     const bool first=!record.changed||!samePlacementD72;

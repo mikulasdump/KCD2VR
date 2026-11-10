@@ -1,5 +1,5 @@
 // Included after gore32.inl; native game-frame owner only. No new hook or native slot ABI.
-static std::atomic<bool> g_chest_dagger54{true};
+static std::atomic<bool> g_chest_dagger54{false}; // R176: removed (no texture, never worked)
 static void ChestDaggerTick54(std::uint64_t now) noexcept {
     static kcd2vr::dagger54::State state{};
     static bool installed=false;static unsigned installAttempts=0;static std::uint64_t installNext=0;

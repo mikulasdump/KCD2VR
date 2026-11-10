@@ -16,6 +16,11 @@ struct Snapshot {
 using Current=bool(*)(const Snapshot&) noexcept;
 inline std::atomic<Current> current{nullptr};
 inline core::SnapshotMailbox<Snapshot> mailbox;
+// R172: a valid release whose native firing action was NOT constructed on the release stack (exactFiringAction=0 in
+// every log since R152, 5 of 5 shots in the 9 Nov 18:40 log) waits here for the player's own Shoot call instead of
+// being retired; before R171 those arrows flew the native camera direction, not where the bow pointed.
+inline core::SnapshotMailbox<Snapshot> pending;
+inline std::atomic<std::uint64_t> pendingPublished{0},pendingUsed{0};
 inline std::atomic<std::uint64_t> lifetime{1},consumed{0};
 inline std::atomic<bool> hooksReady{false};
 inline thread_local Snapshot* releaseDraft=nullptr;
@@ -31,18 +36,23 @@ inline bool live(const Snapshot& s) noexcept {
         ranged_options_d65c::bowPhysicalAim.load(std::memory_order_acquire)&&hooksReady.load(std::memory_order_acquire);
 }
 struct ReleaseScope {
-    Snapshot value{};Snapshot* prior=nullptr;bool finished=false;
+    Snapshot value{};Snapshot* prior=nullptr;bool finished=false,valid=false;
     explicit ReleaseScope(Snapshot s) noexcept: value(s),prior(releaseDraft) {
         // A new release, including a rejected/invalid replacement, retires old aim.
         value.serial=lifetime.fetch_add(1,std::memory_order_acq_rel)+1;
         value.revision=ranged_options_d65c::bowAimRevision.load(std::memory_order_acquire);
-        const bool valid=value.player&&value.ownerInterface&&value.key&&value.generation&&value.body&&value.request&&value.tracking&&
+        // R174: ownerInterface is only needed by the exact-action bind (bindConstructed compares it); the pending Shoot path does not use it
+        const bool valid=value.player&&value.key&&value.generation&&value.body&&value.request&&value.tracking&&
             value.sample&&value.tick&&unit3(value.dir)&&finite3(value.up)&&finite3(value.nock)&&live(value);
-        releaseDraft=valid?&value:nullptr;
+        this->valid=valid;releaseDraft=valid?&value:nullptr;
+        if(valid)(void)pending.publish(value); // R172: also a Shoot inside this very native call (no launcher read yet)
     }
     bool finish(bool nativeCallReturned) noexcept {
         finished=true;releaseDraft=prior;
         if(nativeCallReturned&&value.action&&consumed.load(std::memory_order_acquire)==value.serial)return true;
+        if(nativeCallReturned&&valid&&!value.action&&live(value)){ // R172: no action on this stack, the Shoot may still come
+            if(pending.publish(value)){pendingPublished.fetch_add(1,std::memory_order_relaxed);return false;}
+        }
         if(!nativeCallReturned||!value.action||!live(value)){retire(value.serial);return false;}
         return true;
     }
@@ -82,6 +92,21 @@ inline Refusal take(void* actor,void* launcher,Snapshot& out) noexcept {
     auto seen=consumed.load(std::memory_order_acquire);
     for(;;){if(seen>=s->serial)return Refusal::Consumed;if(consumed.compare_exchange_weak(seen,s->serial,std::memory_order_acq_rel))break;}
     out=*s;return Refusal::None;
+}
+// R172: the player's own Shoot without a bound action scope. same player, same launcher (when the release could read it),
+// fresh (kMaxReleaseAgeMs), still live (no newer release / retire), the current-context check, used once.
+inline Refusal takePending(void* actor,void* launcher,std::uint64_t now,Snapshot& out) noexcept {
+    if(!ranged_options_d65c::bowPhysicalAim.load())return Refusal::Disabled;
+    Snapshot s{};if(!pending.read(s)||!s.serial||!live(s))return Refusal::NoRelease;
+    if(s.player!=actor)return Refusal::ActorMismatch;
+    if(!launcher||(s.launcher&&s.launcher!=launcher))return Refusal::LauncherMismatch;
+    if(!s.tick||now<s.tick||now-s.tick>kMaxReleaseAgeMs){retire(s.serial);return Refusal::Stale;}
+    if(!unit3(s.dir)||!finite3(s.up)||!finite3(s.nock))return Refusal::Invalid;
+    const auto validate=current.load(std::memory_order_acquire);
+    if(!validate||!validate(s)){retire(s.serial);return Refusal::ContextLost;}
+    auto seen=consumed.load(std::memory_order_acquire);
+    for(;;){if(seen>=s.serial)return Refusal::Consumed;if(consumed.compare_exchange_weak(seen,s.serial,std::memory_order_acq_rel))break;}
+    retire(s.serial);pendingUsed.fetch_add(1,std::memory_order_relaxed);out=s;return Refusal::None;
 }
 inline const char* name(Refusal r) noexcept {
     switch(r){case Refusal::None:return "NONE";case Refusal::Disabled:return "DISABLED";case Refusal::NoRelease:return "NO_MATCHED_RELEASE";
