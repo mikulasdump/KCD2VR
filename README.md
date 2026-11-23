@@ -39,7 +39,7 @@ I added HMD turn -  so the Henry follows where you look (on is 30° or off is af
 1. download the latest version from the Files tab (Nexus) or the GitHub Releases page
 2. copy `dinput8.dll` into the game's binary folder, next to `WHGame.dll` and the game's .exe (replace an existing dinput8.dll if you have one). you may need to "unblock" the dll (right click - properties - unblock)
    - Steam: `.../KingdomComeDeliverance2/Bin/Win64MasterMasterSteamPGO/`
-   - GOG: `.../KingdomComeDeliverance2/Bin/Win64MasterMaster/`
+   - GOG version is probably not compatible 
 3. copy the `KCD2VR` folder (with `Data/KCD2VR.pak`) into the game's `Mods` folder
 4. optional: the Gore Mod (optional files) also goes into `Mods`
 5. optional: no letterbox mod https://www.nexusmods.com/kingdomcomedeliverance2/mods/34?tab=files into `Mods`
